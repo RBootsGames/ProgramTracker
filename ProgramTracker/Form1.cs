@@ -48,6 +48,12 @@ namespace ProgramTracker
         {
             InitializeComponent();
 
+            //pnl_Tabs.HorizontalScroll.Maximum = 0;
+            //pnl_Tabs.AutoScroll = false;
+            //pnl_Tabs.HorizontalScroll.Visible = false;
+            //pnl_Tabs.VerticalScroll.Visible = false;
+            //pnl_Tabs.AutoScroll = true;
+
             if (Debugger.IsAttached)
             {
                 notifyIcon1.Icon = Resources.ghost_icon;
@@ -72,11 +78,7 @@ namespace ProgramTracker
             {
                 foreach (string group in ProgSettings.ProgramGroups.Keys.Reverse())
                 {
-                    var btn = CustomExtensions.FilterGroupButton(group);
-                    btn.ClickButton += btn_TabGroup_Click;
-                    btn.ClickX += btn_TabGroupDelete_Click;
-                    pnl_Tabs.Controls.Add(btn);
-                    pnl_Tabs.Controls.SetChildIndex(btn, 1);
+                    AddButtonToGroupTabs(group);
                 }
 
             }
@@ -302,7 +304,6 @@ namespace ProgramTracker
             Alphabetize();
         }
 
-
         void AddProgramToGroup(string groupName, string processName)
         {
             //var groupName = sender as ToolStripMenuItem;
@@ -411,6 +412,16 @@ namespace ProgramTracker
             }
         }
 
+        private void pnl_TabsParent_Resize(object sender, EventArgs e)
+        {
+            if (pnl_Tabs.Width < pnl_TabsParent.Width)
+                pnl_Tabs.Location = new Point(0, 0);
+            else if (pnl_Tabs.Width + pnl_Tabs.Location.X < pnl_TabsParent.Width)
+            {
+                pnl_Tabs.Location = new Point(-(pnl_Tabs.Width - pnl_TabsParent.Width), 0);
+            }
+        }
+
 
         private void eventSearchPrograms(object sender, EventArgs e)
         {
@@ -447,6 +458,42 @@ namespace ProgramTracker
         }
 
         #region Group button controls
+
+        void AddButtonToGroupTabs(string buttonText)
+        {
+            var btn = CustomExtensions.FilterGroupButton(buttonText);
+            btn.ClickButton += btn_TabGroup_Click;
+            btn.ClickX += btn_TabGroupDelete_Click;
+            pnl_Tabs.Controls.Add(btn);
+            pnl_Tabs.Controls.SetChildIndex(btn, 1);
+
+            pnl_Tabs.Width = pnl_Tabs.Controls.OfType<Control>().Sum(x => x.Width);
+        }
+        void RemoveButtonFromGroupTabs(Ctrl_ButtonWithX ctrl)
+        {
+            ctrl.Dispose();
+
+            pnl_Tabs.Width = pnl_Tabs.Controls.OfType<Control>().Sum(x => x.Width);
+            pnl_TabsParent_Resize(pnl_Tabs, new EventArgs());
+        }
+
+        void ScrollTabBar(bool moveRight)
+        {
+            var pos = pnl_Tabs.Location;
+
+            pos.X += (moveRight) ? -50 : 50;
+
+            if (pnl_Tabs.Width < pnl_TabsParent.Width)
+                pos.X = 0;
+            else if (pos.X < -(pnl_Tabs.Width - pnl_TabsParent.Width))
+                pos.X = -(pnl_Tabs.Width - pnl_TabsParent.Width);
+            else if (pos.X > 0)
+                pos.X = 0;
+
+            pnl_Tabs.Location = pos;
+        }
+
+
         private void btn_AddGroup_Click(object sender, EventArgs e)
         {
             Tracker selection = selectedTrackingItemForMenu;
@@ -474,17 +521,35 @@ namespace ProgramTracker
 
             ProgSettings.ProgramGroups.Add(groupName, new List<string>());
 
-            var btn = CustomExtensions.FilterGroupButton(groupName);
-            btn.ClickButton += btn_TabGroup_Click;
-            btn.ClickX += btn_TabGroupDelete_Click;
+            AddButtonToGroupTabs(groupName);
+            //var btn = CustomExtensions.FilterGroupButton(groupName);
+            //btn.ClickButton += btn_TabGroup_Click;
+            //btn.ClickX += btn_TabGroupDelete_Click;
 
-            pnl_Tabs.Controls.Add(btn);
-            pnl_Tabs.Controls.SetChildIndex(btn, 1);
+            //pnl_Tabs.Controls.Add(btn);
+            //pnl_Tabs.Controls.SetChildIndex(btn, 1);
 
             if (selection != null)
                 AddProgramToGroup(groupName, selection.ProcessName);
 
             ProgSettings.Save();
+        }
+
+        private void btn_TabGroupDelete_Click(object sender, EventArgs e)
+        {
+            Ctrl_ButtonWithX btn = sender as Ctrl_ButtonWithX;
+
+            
+            if (MessageBox.Show($"Delete program group '{btn.ButtonText}'\nAre you sure?", "Delete?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                ProgSettings.ProgramGroups.Remove(btn.ButtonText);
+                RemoveButtonFromGroupTabs(btn);
+                //btn.Dispose();
+                ProgSettings.Save();
+
+                currentGroupFilter = "";
+                Alphabetize();
+            }
         }
 
         private void btn_TabGroup_Click(object sender, EventArgs e)
@@ -503,21 +568,16 @@ namespace ProgramTracker
             }
         }
 
-        private void btn_TabGroupDelete_Click(object sender, EventArgs e)
+        private void btn_TabScroll_Click(object sender, EventArgs e)
         {
-            Ctrl_ButtonWithX btn = sender as Ctrl_ButtonWithX;
-
-            
-            if (MessageBox.Show($"Delete program group '{btn.ButtonText}'\nAre you sure?", "Delete?", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            {
-                ProgSettings.ProgramGroups.Remove(btn.ButtonText);
-                btn.Dispose();
-                ProgSettings.Save();
-            }
+            if (sender == btn_TabLeft)
+                ScrollTabBar(false);
+            else if (sender == btn_TabRight)
+                ScrollTabBar(true);
         }
 
-        #endregion
 
+        #endregion
         #region tracker item menus
         internal void OpenTrackerData(object sender, MouseEventArgs e)
         {
@@ -747,6 +807,7 @@ namespace ProgramTracker
             Close();
         }
         #endregion
+
         #endregion
     }
 }
