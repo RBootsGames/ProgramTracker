@@ -43,21 +43,11 @@ namespace ProgramTracker
             trackingPoints = entries;
             hasLatestEntry = latestEntry;
 
-            //var tempList = new List<Ctrl_TimeEntry>();
-            //var tempList = trackingPoints.Select(x => new Ctrl_TimeEntry(x));
-            //if (hasLatestEntry)
-            //    tempList.LastOrDefault().IsMostRecent = true;
-
-            //pnl_Contents.Controls.AddRange(tempList.ToArray());
 
             if (!startCollapsed)
                 ExpandControl();
             else
                 CollapseControl();
-            //l_StartRange = startRange;
-            //l_EndRange = endRange;
-            //TrackingData = trackingData;
-            //isCollapsed = collapsed;
         }
 
         void PopulateData()
@@ -88,7 +78,7 @@ namespace ProgramTracker
                 PopulateData();
 
             pnl_Contents.Visible = true;
-            int finalHeight = tableLayoutPanel1.Height;
+            int finalHeight = tableLayoutPanel1.Height + 3;
             foreach (var item in pnl_Contents.Controls.OfType<Control>())
             {
                 finalHeight += item.Height;

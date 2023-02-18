@@ -106,7 +106,7 @@
             this.pict_Icon.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.pict_Icon.Dock = System.Windows.Forms.DockStyle.Left;
             this.pict_Icon.Location = new System.Drawing.Point(20, 0);
-            this.pict_Icon.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pict_Icon.Margin = new System.Windows.Forms.Padding(4);
             this.pict_Icon.Name = "pict_Icon";
             this.pict_Icon.Size = new System.Drawing.Size(33, 47);
             this.pict_Icon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -121,7 +121,7 @@
             // 
             this.spacer.Cursor = System.Windows.Forms.Cursors.Default;
             this.spacer.Location = new System.Drawing.Point(0, 0);
-            this.spacer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.spacer.Margin = new System.Windows.Forms.Padding(4);
             this.spacer.Name = "spacer";
             this.spacer.Size = new System.Drawing.Size(20, 47);
             this.spacer.TabIndex = 6;
@@ -135,7 +135,7 @@
             // 
             this.splitter1.Cursor = System.Windows.Forms.Cursors.Default;
             this.splitter1.Location = new System.Drawing.Point(53, 0);
-            this.splitter1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitter1.Margin = new System.Windows.Forms.Padding(4);
             this.splitter1.Name = "splitter1";
             this.splitter1.Size = new System.Drawing.Size(83, 47);
             this.splitter1.TabIndex = 7;

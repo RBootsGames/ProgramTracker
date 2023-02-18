@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lbl_Duration = new System.Windows.Forms.Label();
             this.lbl_StartDate = new System.Windows.Forms.Label();
             this.pnl_Contents = new System.Windows.Forms.Panel();
-            this.lbl_Duration = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -55,6 +55,19 @@
             this.tableLayoutPanel1.MouseEnter += new System.EventHandler(this.ButtonMouseEnter);
             this.tableLayoutPanel1.MouseLeave += new System.EventHandler(this.ButtonMouseLeave);
             // 
+            // lbl_Duration
+            // 
+            this.lbl_Duration.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_Duration.Location = new System.Drawing.Point(211, 0);
+            this.lbl_Duration.Name = "lbl_Duration";
+            this.lbl_Duration.Size = new System.Drawing.Size(203, 28);
+            this.lbl_Duration.TabIndex = 1;
+            this.lbl_Duration.Text = "Duration";
+            this.lbl_Duration.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lbl_Duration.Click += new System.EventHandler(this.ControlClickEvent);
+            this.lbl_Duration.MouseEnter += new System.EventHandler(this.ButtonMouseEnter);
+            this.lbl_Duration.MouseLeave += new System.EventHandler(this.ButtonMouseLeave);
+            // 
             // lbl_StartDate
             // 
             this.lbl_StartDate.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -70,25 +83,13 @@
             // 
             // pnl_Contents
             // 
+            this.pnl_Contents.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.pnl_Contents.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnl_Contents.Location = new System.Drawing.Point(0, 28);
             this.pnl_Contents.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pnl_Contents.Name = "pnl_Contents";
             this.pnl_Contents.Size = new System.Drawing.Size(417, 122);
             this.pnl_Contents.TabIndex = 1;
-            // 
-            // lbl_Duration
-            // 
-            this.lbl_Duration.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbl_Duration.Location = new System.Drawing.Point(211, 0);
-            this.lbl_Duration.Name = "lbl_Duration";
-            this.lbl_Duration.Size = new System.Drawing.Size(203, 28);
-            this.lbl_Duration.TabIndex = 1;
-            this.lbl_Duration.Text = "Duration";
-            this.lbl_Duration.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lbl_Duration.Click += new System.EventHandler(this.ControlClickEvent);
-            this.lbl_Duration.MouseEnter += new System.EventHandler(this.ButtonMouseEnter);
-            this.lbl_Duration.MouseLeave += new System.EventHandler(this.ButtonMouseLeave);
             // 
             // Ctrl_CollapsibleTimeEntries
             // 

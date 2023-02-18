@@ -155,7 +155,6 @@
             // 
             // topMenu
             // 
-            this.topMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
             this.topMenu.ImageScalingSize = new System.Drawing.Size(21, 21);
             this.topMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menu_Edit});
