@@ -1,4 +1,5 @@
-﻿using ProgramTracker.Properties;
+﻿using Microsoft.Win32;
+using ProgramTracker.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -48,11 +49,6 @@ namespace ProgramTracker
         {
             InitializeComponent();
 
-            //pnl_Tabs.HorizontalScroll.Maximum = 0;
-            //pnl_Tabs.AutoScroll = false;
-            //pnl_Tabs.HorizontalScroll.Visible = false;
-            //pnl_Tabs.VerticalScroll.Visible = false;
-            //pnl_Tabs.AutoScroll = true;
 
             if (Debugger.IsAttached)
             {
@@ -196,18 +192,18 @@ namespace ProgramTracker
 
         internal void Alphabetize()
         {
-            //return;
             pnl_TrackedProgs.UpdateOnThread(() =>
             {
                 var cti = pnl_TrackedProgs.Controls.OfType<Ctrl_TrackingItem>()
                             .OrderBy(x => x.GetVisibleName());
 
+                // apply filtering
                 if (ProgSettings.ProgramGroups.TryGetValue(currentGroupFilter, out var filtered))
                 {
                     if (filtered.Count > 0)
                     {
-                        foreach (var ctrl in cti)
-                            ctrl.Visible = filtered.Contains(ctrl.ProcessName);
+                            foreach (var ctrl in cti)
+                                ctrl.Visible = filtered.Contains(ctrl.ProcessName) && ctrl.FoundInSearch;
                     }
                     else
                     {
@@ -217,7 +213,8 @@ namespace ProgramTracker
                 }
                 else
                     foreach (var ctrl in cti)
-                        ctrl.Visible = true;
+                        ctrl.Visible = ctrl.FoundInSearch;
+
 
                 var first  = cti.Where(x => x.ParentTracker.IsRunning == true);
                 var second = cti.Where(x => x.ParentTracker.IsRunning == false);
@@ -391,8 +388,14 @@ namespace ProgramTracker
             }
         }
 
+        
+
         private void Frm_Main_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (e.CloseReason != CloseReason.UserClosing)
+                actuallyClosing = true;
+
+
             if (!Debugger.IsAttached && !actuallyClosing)
             {
                 Hide();
@@ -407,9 +410,7 @@ namespace ProgramTracker
             MasterTracker.Save();
 
             if (UpdateThread.IsAlive)
-            {
                 UpdateThread.Abort();
-            }
         }
 
         private void pnl_TabsParent_Resize(object sender, EventArgs e)
@@ -434,11 +435,13 @@ namespace ProgramTracker
                     if (proc.DisplayName.ToLower().Contains(txbx_Search.Text.ToLower()) ||
                         proc.ProcessName.ToLower().Contains(txbx_Search.Text.ToLower()))
                     {
-                        proc.Visible = true;
+                        //proc.Visible = true;
+                        proc.FoundInSearch = true;
                     }
                     else
                     {
-                        proc.Visible = false;
+                        //proc.Visible = false;
+                        proc.FoundInSearch = false;
                     }
                 }
             }
@@ -446,7 +449,8 @@ namespace ProgramTracker
             {
                 foreach (Ctrl_TrackingItem proc in ctrls)
                 {
-                    proc.Visible = true;
+                    //proc.Visible = true;
+                    proc.FoundInSearch = true;
                 }
             }
             Alphabetize();

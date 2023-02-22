@@ -26,6 +26,8 @@ namespace ProgramTracker
         internal Tracker ParentTracker => l_ParentTracker;
 
 
+        internal bool FoundInSearch = true;
+
         [Category("Item Settings")]
         public string ProcessName
         {
