@@ -141,6 +141,12 @@
     <Compile Include="Frm_EditBlacklist.Designer.cs">
       <DependentUpon>Frm_EditBlacklist.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm_EditTimeEntry.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_EditTimeEntry.Designer.cs">
+      <DependentUpon>Frm_EditTimeEntry.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm_RenameProc.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,6 +186,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_EditBlacklist.resx">
       <DependentUpon>Frm_EditBlacklist.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_EditTimeEntry.resx">
+      <DependentUpon>Frm_EditTimeEntry.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_RenameProc.resx">
       <DependentUpon>Frm_RenameProc.cs</DependentUpon>

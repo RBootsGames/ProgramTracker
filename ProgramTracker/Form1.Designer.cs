@@ -44,7 +44,10 @@
             this.menu_Edit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuEdit_AddProcess = new System.Windows.Forms.ToolStripMenuItem();
             this.menuEdit_IgnoreList = new System.Windows.Forms.ToolStripMenuItem();
-            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.menuEdit_Minimized = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEdit_Merge = new System.Windows.Forms.ToolStripMenuItem();
+            this.menu_Sort = new System.Windows.Forms.ToolStripComboBox();
+            this.taskbarIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.menu_Notify = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,7 +57,6 @@
             this.pnl_Running = new System.Windows.Forms.Panel();
             this.lbl_Running = new System.Windows.Forms.Label();
             this.pnl_Top = new System.Windows.Forms.Panel();
-            this.txbx_Search = new ProgramTracker.TextBoxModified();
             this.pnl_TabsParent = new System.Windows.Forms.Panel();
             this.pnl_Tabs = new System.Windows.Forms.Panel();
             this.btn_AddGroup = new System.Windows.Forms.Button();
@@ -63,7 +65,7 @@
             this.btn_TabRight = new System.Windows.Forms.Button();
             this.btn_TabLeft = new System.Windows.Forms.Button();
             this.btn_ClearSearch = new System.Windows.Forms.Button();
-            this.pageSetupDialog1 = new System.Windows.Forms.PageSetupDialog();
+            this.txbx_Search = new ProgramTracker.TextBoxModified();
             this.menu_TrackerSettings.SuspendLayout();
             this.topMenu.SuspendLayout();
             this.menu_Notify.SuspendLayout();
@@ -155,13 +157,15 @@
             // 
             // topMenu
             // 
+            this.topMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
             this.topMenu.ImageScalingSize = new System.Drawing.Size(21, 21);
             this.topMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menu_Edit});
+            this.menu_Edit,
+            this.menu_Sort});
             this.topMenu.Location = new System.Drawing.Point(0, 0);
             this.topMenu.Name = "topMenu";
             this.topMenu.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
-            this.topMenu.Size = new System.Drawing.Size(669, 29);
+            this.topMenu.Size = new System.Drawing.Size(669, 33);
             this.topMenu.TabIndex = 12;
             this.topMenu.Text = "menuStrip1";
             // 
@@ -169,32 +173,60 @@
             // 
             this.menu_Edit.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuEdit_AddProcess,
-            this.menuEdit_IgnoreList});
+            this.menuEdit_IgnoreList,
+            this.menuEdit_Minimized,
+            this.menuEdit_Merge});
             this.menu_Edit.Name = "menu_Edit";
-            this.menu_Edit.Size = new System.Drawing.Size(50, 25);
+            this.menu_Edit.Size = new System.Drawing.Size(50, 29);
             this.menu_Edit.Text = "Edit";
             // 
             // menuEdit_AddProcess
             // 
             this.menuEdit_AddProcess.Name = "menuEdit_AddProcess";
-            this.menuEdit_AddProcess.Size = new System.Drawing.Size(237, 30);
+            this.menuEdit_AddProcess.Size = new System.Drawing.Size(272, 30);
             this.menuEdit_AddProcess.Text = "Add custom process";
             this.menuEdit_AddProcess.Click += new System.EventHandler(this.menuEdit_AddProcess_Click);
             // 
             // menuEdit_IgnoreList
             // 
             this.menuEdit_IgnoreList.Name = "menuEdit_IgnoreList";
-            this.menuEdit_IgnoreList.Size = new System.Drawing.Size(237, 30);
+            this.menuEdit_IgnoreList.Size = new System.Drawing.Size(272, 30);
             this.menuEdit_IgnoreList.Text = "Edit ignore list";
             this.menuEdit_IgnoreList.Click += new System.EventHandler(this.menuEdit_IgnoreList_Click);
             // 
-            // notifyIcon1
+            // menuEdit_Minimized
             // 
-            this.notifyIcon1.ContextMenuStrip = this.menu_Notify;
-            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "Program Tracker";
-            this.notifyIcon1.Visible = true;
-            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            this.menuEdit_Minimized.CheckOnClick = true;
+            this.menuEdit_Minimized.Name = "menuEdit_Minimized";
+            this.menuEdit_Minimized.Size = new System.Drawing.Size(272, 30);
+            this.menuEdit_Minimized.Text = "Start Minimized";
+            this.menuEdit_Minimized.Click += new System.EventHandler(this.menuEdit_Minimized_Click);
+            // 
+            // menuEdit_Merge
+            // 
+            this.menuEdit_Merge.Name = "menuEdit_Merge";
+            this.menuEdit_Merge.Size = new System.Drawing.Size(272, 30);
+            this.menuEdit_Merge.Text = "Merge tracking data (NA)";
+            this.menuEdit_Merge.Visible = false;
+            // 
+            // menu_Sort
+            // 
+            this.menu_Sort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.menu_Sort.Items.AddRange(new object[] {
+            "Alphabetical   ",
+            "Duration         ",
+            "Most Recent   "});
+            this.menu_Sort.Name = "menu_Sort";
+            this.menu_Sort.Size = new System.Drawing.Size(150, 29);
+            this.menu_Sort.SelectedIndexChanged += new System.EventHandler(this.menu_Sort_SelectionChange);
+            // 
+            // taskbarIcon
+            // 
+            this.taskbarIcon.ContextMenuStrip = this.menu_Notify;
+            this.taskbarIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("taskbarIcon.Icon")));
+            this.taskbarIcon.Text = "Program Tracker";
+            this.taskbarIcon.Visible = true;
+            this.taskbarIcon.DoubleClick += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // menu_Notify
             // 
@@ -226,10 +258,10 @@
             this.pnl_TrackedProgs.Controls.Add(this.pnl_Stopped);
             this.pnl_TrackedProgs.Controls.Add(this.pnl_Running);
             this.pnl_TrackedProgs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnl_TrackedProgs.Location = new System.Drawing.Point(0, 81);
+            this.pnl_TrackedProgs.Location = new System.Drawing.Point(0, 85);
             this.pnl_TrackedProgs.Margin = new System.Windows.Forms.Padding(4);
             this.pnl_TrackedProgs.Name = "pnl_TrackedProgs";
-            this.pnl_TrackedProgs.Size = new System.Drawing.Size(669, 463);
+            this.pnl_TrackedProgs.Size = new System.Drawing.Size(669, 459);
             this.pnl_TrackedProgs.TabIndex = 13;
             // 
             // pnl_Stopped
@@ -284,26 +316,11 @@
             this.pnl_Top.Controls.Add(this.pnl_TabsParent);
             this.pnl_Top.Controls.Add(this.pnl_TopRightButtons);
             this.pnl_Top.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnl_Top.Location = new System.Drawing.Point(0, 29);
+            this.pnl_Top.Location = new System.Drawing.Point(0, 33);
             this.pnl_Top.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pnl_Top.Name = "pnl_Top";
             this.pnl_Top.Size = new System.Drawing.Size(669, 52);
             this.pnl_Top.TabIndex = 0;
-            // 
-            // txbx_Search
-            // 
-            this.txbx_Search.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txbx_Search.ForeColor = System.Drawing.Color.Gray;
-            this.txbx_Search.Location = new System.Drawing.Point(0, 0);
-            this.txbx_Search.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.txbx_Search.Name = "txbx_Search";
-            this.txbx_Search.RealText = "";
-            this.txbx_Search.Size = new System.Drawing.Size(618, 22);
-            this.txbx_Search.TabIndex = 1;
-            this.txbx_Search.Text = "Search Processes";
-            this.txbx_Search.TextPlaceholder = "Search Processes";
-            this.txbx_Search.TextPlaceholderColor = System.Drawing.SystemColors.ActiveBorder;
-            this.txbx_Search.TextChangedFixed += new System.EventHandler(this.eventSearchPrograms);
             // 
             // pnl_TabsParent
             // 
@@ -406,6 +423,21 @@
             this.btn_ClearSearch.UseVisualStyleBackColor = true;
             this.btn_ClearSearch.Click += new System.EventHandler(this.btn_ClearSearch_Click);
             // 
+            // txbx_Search
+            // 
+            this.txbx_Search.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txbx_Search.ForeColor = System.Drawing.Color.Gray;
+            this.txbx_Search.Location = new System.Drawing.Point(0, 0);
+            this.txbx_Search.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.txbx_Search.Name = "txbx_Search";
+            this.txbx_Search.RealText = "";
+            this.txbx_Search.Size = new System.Drawing.Size(618, 22);
+            this.txbx_Search.TabIndex = 1;
+            this.txbx_Search.Text = "Search Processes";
+            this.txbx_Search.TextPlaceholder = "Search Processes";
+            this.txbx_Search.TextPlaceholderColor = System.Drawing.SystemColors.ActiveBorder;
+            this.txbx_Search.TextChangedFixed += new System.EventHandler(this.eventSearchPrograms);
+            // 
             // Frm_Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -450,7 +482,7 @@
         private System.Windows.Forms.ToolStripMenuItem menu_Edit;
         private System.Windows.Forms.ToolStripMenuItem menuEdit_AddProcess;
         private System.Windows.Forms.ToolStripMenuItem menuEdit_IgnoreList;
-        private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.NotifyIcon taskbarIcon;
         private System.Windows.Forms.ContextMenuStrip menu_Notify;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
@@ -458,7 +490,6 @@
         private System.Windows.Forms.Panel pnl_Top;
         private TextBoxModified txbx_Search;
         private System.Windows.Forms.Label lbl_Running;
-        private System.Windows.Forms.PageSetupDialog pageSetupDialog1;
         private System.Windows.Forms.Label lbl_Stopped;
         private System.Windows.Forms.Panel pnl_Stopped;
         private System.Windows.Forms.Panel pnl_Running;
@@ -473,6 +504,9 @@
         private System.Windows.Forms.Button btn_TabRight;
         private System.Windows.Forms.Button btn_TabLeft;
         private System.Windows.Forms.Panel pnl_TabsParent;
+        private System.Windows.Forms.ToolStripMenuItem menuEdit_Minimized;
+        private System.Windows.Forms.ToolStripMenuItem menuEdit_Merge;
+        private System.Windows.Forms.ToolStripComboBox menu_Sort;
     }
 }
 

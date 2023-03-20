@@ -40,6 +40,7 @@ namespace ProgramTracker
             if (loadPath == "")
                 loadPath = Settings.GetSettingsDirectory();
 
+            // missing directory
             if (!Directory.Exists(loadPath))
             {
                 Console.Error.WriteLine($"'{loadPath}' doesn't exist.");
@@ -48,6 +49,7 @@ namespace ProgramTracker
 
             loadPath = Path.Combine(loadPath, "trackingdata.json");
 
+            // missing file
             if (!File.Exists(loadPath))
             {
                 Console.Error.WriteLine($"'{loadPath}' doesn't exist.");
@@ -56,9 +58,21 @@ namespace ProgramTracker
 
             string data = File.ReadAllText(loadPath);
 
+            // actual loading data
             try
             {
                 MasterTrackerClass mtc = JsonSerializer.Deserialize<MasterTrackerClass>(data);
+
+                // setup events
+                foreach (Tracker tracker in mtc.ProcessTrackers.Values)
+                {
+                    tracker.ApplyItemUpdateEvents();
+                    tracker.ItemUpdated += mtc.OnTrackerUpdate;
+                    foreach (var item in tracker.TimeMarkers)
+                    {
+                        item.ParentTracker = tracker;
+                    }
+                }
 
                 var allControls = mtc.ProcessTrackers.Values.Select(x => x.GetFormControl(true)).ToArray();
                 //var allControls = mtc.ProcessTrackers.Values.OrderBy(n => n.GetVisibleName())
@@ -66,7 +80,7 @@ namespace ProgramTracker
                 //                                .Select(x => x.GetFormControl(true));
 
                 Frm_Main.MainForm.pnl_TrackedProgs.Controls.AddRange(allControls.ToArray());
-                Frm_Main.MainForm.Alphabetize();
+                Frm_Main.MainForm.SortEntries();
                 Console.WriteLine("Tracking data loaded");
                 return mtc;
             }
@@ -78,7 +92,6 @@ namespace ProgramTracker
                 throw;
                 //return null;
             }
-
         }
 
 
@@ -96,6 +109,8 @@ namespace ProgramTracker
                 {
                     Frm_Main.MainForm.pnl_TrackedProgs.Controls.Add(ctrl);
                 });
+
+                t.ItemUpdated += OnTrackerUpdate;
             }
         }
 
@@ -145,6 +160,12 @@ namespace ProgramTracker
 
             return trackerTimes;
         }
+
+        private void OnTrackerUpdate(object sender, EventArgs e)
+        {
+            Tracker t = sender as Tracker;
+            Console.WriteLine(t.ProcessName + " was updated");
+        }
     }
 
     internal class Tracker
@@ -154,16 +175,21 @@ namespace ProgramTracker
 
         private Ctrl_TrackingItem TrackingFormControl { get; set; }
         
+        /// <summary>
+        /// Gets the control, not the actual time entry
+        /// </summary>
         private Ctrl_TimeEntry MostRecentEntry { get; set; }
 
         internal bool IsRunning
         {
             get
             {
-                return TimeMarkers.Last().StopTime == null;
+                return TimeMarkers.Count != 0 && TimeMarkers.Last().StopTime == null;
             }
         }
 
+
+        public event EventHandler ItemUpdated;
 
         public Tracker() 
         {
@@ -177,7 +203,13 @@ namespace ProgramTracker
         {
             ProcessName = processName;
             TimeMarkers = new List<TrackingPoint>();
-            TimeMarkers.Add(new TrackingPoint(startTime));
+            var p = new TrackingPoint(startTime, parent:this);
+            p.UpdatedTracker += OnItemUpdated;
+            //p.UpdatedTracker += new EventHandler(delegate (object sender, EventArgs e)
+            //{
+            //    OnItemUpdated(e);
+            //});
+            TimeMarkers.Add(p);
             TrackingFormControl = (_trackingForm != null) ? _trackingForm : new Ctrl_TrackingItem(ProcessName, this, _displayName:GetDisplayName());
             //TrackingFormControl.Dock = DockStyle.Top;
 
@@ -239,10 +271,34 @@ namespace ProgramTracker
         public Ctrl_TimeEntry GetMostRecentEntry() => MostRecentEntry;
         public void SetMostRecentEntry(Ctrl_TimeEntry entry) => MostRecentEntry = entry;
 
+        /// <summary>
+        /// Tracking point needs to have an stop time.
+        /// </summary>
+        /// <param name="point"></param>
+        public void InsertTrackingPoint(TrackingPoint point)
+        {
+            if (point.IsRunning)
+            {
+                Console.WriteLine("Couldn't insert tracking point because it doesn't have a stop time.");
+                return;
+            }
+
+            point.ParentTracker = this;
+            point.UpdatedTracker += OnItemUpdated;
+            TimeMarkers.Add(point);
+        }
+
+        /// <summary></summary>
+        /// <param name="startTime">Defaults to DateTime.Now.</param>
         public void StartTracking(DateTime? startTime = null)
         {
             if (!IsRunning)
-                TimeMarkers.Add(new TrackingPoint(startTime));
+            {
+                TrackingPoint p = new TrackingPoint(startTime, parent:this);
+                p.UpdatedTracker += OnItemUpdated;
+
+                TimeMarkers.Add(p);
+            }
 
             if (TrackingFormControl.Icon == null)
                 TrackingFormControl.Icon = GetSavedIcon();
@@ -273,20 +329,156 @@ namespace ProgramTracker
             TrackingFormControl.Duration = time;
             return time;
         }
+
+        /// <summary>
+        /// Searches through existing points in the time markers and returns a list of points that overlap the passed through point.
+        /// </summary>
+        public List<TrackingPoint> CheckForOverlap(TrackingPoint ignoreThisOne, TrackingPoint overlapper)
+        {
+            var matches = new List<TrackingPoint>();
+
+            // The order of tracking points should already be ordered by start time.
+            foreach (TrackingPoint compare in TimeMarkers.Where(x=>x != ignoreThisOne))
+            {
+                if (compare.StopTime < overlapper.StartTime)
+                    continue;
+                else if (compare.StartTime >= overlapper.StopTime) // stop iterating if already passed overlapper
+                    break;
+
+                if ((compare.StartTime >= overlapper.StartTime && compare.StartTime <= overlapper.StopTime) ||
+                     (compare.StopTime > overlapper.StartTime && compare.StopTime <= overlapper.StopTime))
+                {
+                    matches.Add(compare);
+                }
+            }
+
+            return matches;
+        }
+
+        /// <summary>
+        /// This will take the oldest start point and the newest stop point and remove all the other points. CheckForOverlap() should be run before this.
+        /// </summary>
+        public void Merge(params TrackingPoint[] mergers)
+        {
+            if (mergers == null || mergers.Length == 0)
+                return;
+
+            DateTime start = mergers.OrderBy(x => x.StartTime).First().StartTime;
+            DateTime end = (DateTime)mergers.OrderBy(x => x.StopTime).Last().StopTime;
+            int index = mergers.Select(x => TimeMarkers.IndexOf(x)).OrderBy(x => x).Where(i => i != -1).First();
+            var query = mergers.OrderBy(x => x.StopTime).Where(x => TimeMarkers.Contains(x)).ToList();
+
+            for (int i = 0; i < query.Count-1; i++)
+            {
+                TimeMarkers.Remove(query[i]);
+                query[i].GetTimeEntryControl().Dispose();
+            }
+
+            var last = query.Last();
+            last.StartTime = start;
+            last.StopTime = end;
+
+            //foreach (var remover in mergers)
+            //    TimeMarkers.Remove(remover);
+
+            //var added = new TrackingPoint(start, end, this);
+            //added.UpdatedTracker += OnItemUpdated;
+            //TimeMarkers.Insert(index, added);
+        }
+
+
+        /// <summary>
+        /// This is so I don't have to make OnItemUpdated() accessible outside of this class.
+        /// </summary>
+        internal void ApplyItemUpdateEvents()
+        {
+            foreach (var p in TimeMarkers)
+            {
+                p.UpdatedTracker += OnItemUpdated;
+            }
+        }
+
+        internal virtual void OnItemUpdated(object sender, EventArgs e)
+        {
+            // update order of tracking points
+            TimeMarkers = TimeMarkers.OrderBy(x => x.StartTime).ToList();
+            ItemUpdated?.Invoke(this, e);
+        }
     }
 
     internal class TrackingPoint
     {
-        public DateTime StartTime { get; set; }
-        public DateTime? StopTime { get; set; }
+        DateTime l_StartTime;
+        DateTime? l_StopTime;
+        Ctrl_TimeEntry l_TimeEntryControl = null;
+
+        public Tracker ParentTracker = null;
+        public DateTime StartTime
+        {
+            get => l_StartTime;
+            set
+            {
+                bool updated = false;
+                if (!l_StartTime.Equals(value))
+                    updated = true;
+
+                l_StartTime = value;
+                if (updated)
+                    OnUpdateTracker(EventArgs.Empty);
+            }
+        }
+        public DateTime? StopTime
+        {
+            get => l_StopTime;
+            set
+            {
+                bool stopped = false;
+                bool updated = false;
+                if (l_StopTime == null && value != null)
+                    stopped = true;
+
+                if (!l_StopTime.Equals(value))
+                    updated = true;
+
+                l_StopTime = value;
+
+                if (stopped)
+                    OnStoppedTracking(EventArgs.Empty);
+
+                if (updated)
+                    OnUpdateTracker(EventArgs.Empty);
+            }
+        }
 
         internal bool IsRunning => StopTime == null;
 
+        public event EventHandler StoppedTracking;
+
+        public event EventHandler UpdatedTracker;
+
+
         public TrackingPoint() { }
-        public TrackingPoint(DateTime? _startTime, DateTime? _stopTime = null)
+        public TrackingPoint(DateTime? _startTime, DateTime? _stopTime = null, Tracker parent = null)
         {
             StartTime = (_startTime == null) ? DateTime.Now : (DateTime)_startTime;
             StopTime = _stopTime;
+            ParentTracker = parent;
+        }
+
+        public void SetTimeEntryControl(Ctrl_TimeEntry ctrl) => l_TimeEntryControl = ctrl;
+        public Ctrl_TimeEntry GetTimeEntryControl() => l_TimeEntryControl;
+
+        public TrackingPoint Clone()
+        {
+            // This will also clone the events
+            var clone = this.MemberwiseClone() as TrackingPoint;
+            if (clone.ParentTracker != null)
+            {
+                clone.UpdatedTracker -= clone.ParentTracker.OnItemUpdated;
+                clone.ParentTracker = null;
+            }
+
+            return clone;
         }
 
         internal TimeSpan GetDuration(bool calculateIfActive=false)
@@ -296,6 +488,9 @@ namespace ProgramTracker
         }
 
 
+        /// <summary>
+        /// Adds the duration of all the tracking points in the parameters.
+        /// </summary>
         public static TimeSpan GetDuration(params TrackingPoint[] entries)
         {
             TimeSpan duration = TimeSpan.Zero;
@@ -307,6 +502,17 @@ namespace ProgramTracker
             }
 
             return duration;
+        }
+
+
+
+        protected virtual void OnStoppedTracking(EventArgs e)
+        {
+            StoppedTracking?.Invoke(this, e);
+        }
+        protected virtual void OnUpdateTracker(EventArgs e)
+        {
+            UpdatedTracker?.Invoke(this, e);
         }
     }
 }

@@ -109,7 +109,7 @@
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label lbl_StartDate;
-        private System.Windows.Forms.Panel pnl_Contents;
         private System.Windows.Forms.Label lbl_Duration;
+        public System.Windows.Forms.Panel pnl_Contents;
     }
 }

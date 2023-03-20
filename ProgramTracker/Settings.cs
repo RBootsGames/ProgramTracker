@@ -18,6 +18,7 @@ namespace ProgramTracker
         /// Key: name of group Value: list of processes in the group
         /// </summary>
         public Dictionary<string, List<string>> ProgramGroups { get; set; } = new Dictionary<string, List<string>>();
+        public bool StartMinimized { get; set; } = false;
 
 
         /// <summary></summary>

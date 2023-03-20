@@ -25,6 +25,37 @@ namespace ProgramTracker
 {
     public partial class Frm_Main : Form
     {
+        enum SortOrderType
+        {
+            Alphabetical,
+            Duration,
+            MostRecent,
+            AlphabeticalAcending,
+            DurationAcending,
+            MostRecentAcending,
+        }
+
+        SortOrderType l_SortOrder;
+
+        SortOrderType SortOrder
+        {
+            get => l_SortOrder;
+            set
+            {
+                if (l_SortOrder == value)
+                { // ↑
+                    l_SortOrder = value + Enum.GetNames(typeof(SortOrderType)).Length / 2;
+                    menu_Sort.Items[menu_Sort.SelectedIndex] += "↑";
+                }
+                else
+                { // ↓
+                    l_SortOrder = value;
+                    menu_Sort.Items[menu_Sort.SelectedIndex] += "↓";
+                }
+            }
+        }
+
+
         internal static Settings ProgSettings = new Settings();
         internal static MasterTrackerClass MasterTracker = new MasterTrackerClass();
         internal static Frm_Main MainForm = null;
@@ -48,12 +79,13 @@ namespace ProgramTracker
         public Frm_Main()
         {
             InitializeComponent();
-
+            l_SortOrder = SortOrderType.AlphabeticalAcending;
+            menu_Sort.SelectedIndex = 0;
 
             if (Debugger.IsAttached)
             {
-                notifyIcon1.Icon = Resources.ghost_icon;
-                notifyIcon1.Text = "Program Tracker (Debugging)";
+                taskbarIcon.Icon = Resources.ghost_icon;
+                taskbarIcon.Text = "Program Tracker (Debugging)";
             }
 
             tmr_CheckEventlessProcesses.Elapsed += tmr_CheckEventlessProcesses_Tick;
@@ -69,14 +101,23 @@ namespace ProgramTracker
 
 
             ProgSettings = Settings.Load();
+            menuEdit_Minimized.Checked = ProgSettings.StartMinimized;
 
             if (ProgSettings.ProgramGroups.Count > 0)
             {
-                foreach (string group in ProgSettings.ProgramGroups.Keys.Reverse())
+                foreach (string group in ProgSettings.ProgramGroups.Keys)
                 {
                     AddButtonToGroupTabs(group);
                 }
 
+            }
+
+            if (!Debugger.IsAttached && ProgSettings.StartMinimized)
+            {
+                this.Shown += new EventHandler(delegate (Object sender, EventArgs e)
+                {
+                    Hide();
+                });
             }
 
             UpdateLoop();
@@ -131,7 +172,7 @@ namespace ProgramTracker
                         {
                             //throw;
                             OpenProcesses.Remove(item.Id);
-                            eventlessProcesses.Add(item.ProcessName);
+                            eventlessProcesses.AddWithoutDupes(item.ProcessName);
                             //continue;
                         }
                     }
@@ -161,7 +202,7 @@ namespace ProgramTracker
                 DateTime? progStart = // This got pretty messy didn't it?
                     (compareTime <= item.StartTime)
                     ? item.StartTime : DateTime.Now;
-                
+
 
                 MasterTracker.StartTrackingProcess(item.ProcessName, progStart);
                 if (selectedTrackingItem != null && selectedTrackingItem.ProcessName == item.ProcessName)
@@ -170,7 +211,7 @@ namespace ProgramTracker
                 }
 
             }
-            Alphabetize();
+            SortEntries();
 
             // start a timer that checks these processes
             if (eventlessProcesses.Count > 0 && tmr_CheckEventlessProcesses.Enabled == false)
@@ -190,12 +231,60 @@ namespace ProgramTracker
             //}
         }
 
-        internal void Alphabetize()
+        internal void SortEntries()
         {
             pnl_TrackedProgs.UpdateOnThread(() =>
             {
-                var cti = pnl_TrackedProgs.Controls.OfType<Ctrl_TrackingItem>()
-                            .OrderBy(x => x.GetVisibleName());
+                IEnumerable<Ctrl_TrackingItem> cti = pnl_TrackedProgs.Controls.OfType<Ctrl_TrackingItem>();
+
+
+                // do sorting
+                switch (SortOrder)
+                {
+                    case SortOrderType.Alphabetical:
+                        cti = cti.OrderBy(x => x.GetVisibleName());
+                        break;
+                    case SortOrderType.Duration:
+                        cti = cti.OrderByDescending(x => x.Duration);
+                        break;
+                    case SortOrderType.MostRecent:
+                        cti = cti.OrderByDescending(x =>
+                        {
+                            var temp = x.ParentTracker.TimeMarkers.LastOrDefault();
+                            if (temp == null)
+                                return DateTime.MinValue;
+                            else if (temp.IsRunning)
+                                return temp.StartTime;
+                            else
+                                return temp.StopTime;
+                        });
+                        break;
+
+                    // ====================== inverted sorting ======================
+                    case SortOrderType.AlphabeticalAcending:
+                        cti = cti.OrderByDescending(x => x.GetVisibleName());
+                        break;
+                    case SortOrderType.DurationAcending:
+                        cti = cti.OrderBy(x => x.Duration);
+                        break;
+                    case SortOrderType.MostRecentAcending:
+                        cti = cti.OrderBy(x =>
+                        {
+                            var temp = x.ParentTracker.TimeMarkers.LastOrDefault();
+                            if (temp == null)
+                                return DateTime.MinValue;
+                            else if (temp.IsRunning)
+                                return temp.StartTime;
+                            else
+                                return temp.StopTime;
+                        });
+                        break;
+                    default:
+                        cti = cti.OrderBy(x => x.GetVisibleName());
+                        break;
+                }
+
+
 
                 // apply filtering
                 if (ProgSettings.ProgramGroups.TryGetValue(currentGroupFilter, out var filtered))
@@ -298,7 +387,7 @@ namespace ProgramTracker
 
 
             Console.WriteLine($"{proc.Id} :: {proc.ProcessName.PadRight(25)} exited.");
-            Alphabetize();
+            SortEntries();
         }
 
         void AddProgramToGroup(string groupName, string processName)
@@ -333,7 +422,7 @@ namespace ProgramTracker
             {
                 var t = selectedTrackingItem;
                 t.GetMostRecentEntry().CalculateDuration();
-                Controls.OfType<Ctrl_TrackingInfoPage>().First().UpdateTime();
+                Controls.OfType<Ctrl_TrackingInfoPage>().First().UpdateTimeDuration();
                 //Console.WriteLine("skipping");
             }
         }
@@ -388,7 +477,7 @@ namespace ProgramTracker
             }
         }
 
-        
+
 
         private void Frm_Main_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -396,6 +485,7 @@ namespace ProgramTracker
                 actuallyClosing = true;
 
 
+            //if (!actuallyClosing)
             if (!Debugger.IsAttached && !actuallyClosing)
             {
                 Hide();
@@ -453,7 +543,7 @@ namespace ProgramTracker
                     proc.FoundInSearch = true;
                 }
             }
-            Alphabetize();
+            SortEntries();
         }
 
         private void btn_ClearSearch_Click(object sender, EventArgs e)
@@ -523,7 +613,8 @@ namespace ProgramTracker
 
             // actually create the group
 
-            ProgSettings.ProgramGroups.Add(groupName, new List<string>());
+            //ProgSettings.ProgramGroups.Add(groupName, new List<string>());
+            ProgSettings.ProgramGroups[groupName] = new List<string>();
 
             AddButtonToGroupTabs(groupName);
             //var btn = CustomExtensions.FilterGroupButton(groupName);
@@ -552,7 +643,7 @@ namespace ProgramTracker
                 ProgSettings.Save();
 
                 currentGroupFilter = "";
-                Alphabetize();
+                SortEntries();
             }
         }
 
@@ -563,12 +654,12 @@ namespace ProgramTracker
                 Ctrl_ButtonWithX btn = sender as Ctrl_ButtonWithX;
 
                 currentGroupFilter = btn.ButtonText;
-                Alphabetize();
+                SortEntries();
             }
             else
             {
                 currentGroupFilter = "";
-                Alphabetize();
+                SortEntries();
             }
         }
 
@@ -672,7 +763,7 @@ namespace ProgramTracker
                 ProgSettings.SetProcessDisplayName(selection.ProcessName, newName);
                 selection.GetFormControl(true);
 
-                Alphabetize();
+                SortEntries();
             }
         }
 
@@ -689,7 +780,7 @@ namespace ProgramTracker
                     remover.Exited -= eventProgramExit;
                 }
             }
-            Alphabetize();
+            SortEntries();
         }
 
         private void menuTS_Blacklist_Click(object sender, EventArgs e)
@@ -707,7 +798,7 @@ namespace ProgramTracker
 
                 ProgSettings.Save();
             }
-            Alphabetize();
+            SortEntries();
         }
 
         private void menuTS_DeleteIcon_Click(object sender, EventArgs e)
@@ -792,17 +883,19 @@ namespace ProgramTracker
             popup.Location = this.Location;
         }
 
+        private void menuEdit_Minimized_Click(object sender, EventArgs e)
+        {
+            ProgSettings.StartMinimized = menuEdit_Minimized.Checked;
+            ProgSettings.Save();
+        }
+
         #endregion
         #region Notify menu
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Show();
             WindowState = FormWindowState.Normal;
-        }
-
-        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
-        {
-            openToolStripMenuItem_Click(sender, e);
+            SortEntries();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -813,5 +906,22 @@ namespace ProgramTracker
         #endregion
 
         #endregion
+
+        private void menu_Sort_SelectionChange(object sender, EventArgs e)
+        {
+            menu_Sort.SelectedIndexChanged -= menu_Sort_SelectionChange;
+
+            for (int i = 0; i < menu_Sort.Items.Count; i++)
+            {
+                menu_Sort.Items[i] = ((string)menu_Sort.Items[i]).Replace('↓', ' ');
+                menu_Sort.Items[i] = ((string)menu_Sort.Items[i]).Replace('↑', ' ');
+            }
+
+            SortOrder = (SortOrderType)menu_Sort.SelectedIndex;
+            ActiveControl = null;
+            SortEntries();
+
+            menu_Sort.SelectedIndexChanged += menu_Sort_SelectionChange;
+        }
     }
 }

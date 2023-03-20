@@ -57,6 +57,19 @@ namespace ProgramTracker
             return sorted;
         }
 
+        /// <summary></summary>
+        /// <returns>Returns true if item was addedd successfully.</returns>
+        public static bool AddWithoutDupes<T>(this List<T> input, T item)
+        {
+            if (input.Contains(item))
+                return false;
+            else
+            {
+                input.Add(item);
+                return true;
+            }
+        }
+
 
         /// <summary>
         /// Example:
@@ -95,6 +108,31 @@ namespace ProgramTracker
             //btn.UseVisualStyleBackColor = true;
 
             return btn;
+        }
+
+        /// <summary>
+        /// Checks parents recursively and grabs the nearest parent of type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="parentLevel">The number of times a parent of type <typeparamref name="T"/> needs to be found.</param>
+        /// <returns></returns>
+        public static T GetParentOfType<T>(this Control input, int parentLevel=1) where T : Control
+        {
+            T correctParent = null;
+            Control tempParent = input.Parent;
+            while (tempParent != null && parentLevel > 0)
+            {
+                //Console.WriteLine(tempParent.GetType);
+                if (tempParent is T)
+                {
+                    correctParent = (T)tempParent;
+                    parentLevel--;
+                }
+                else
+                    tempParent = tempParent.Parent;
+            }
+
+            return correctParent;
         }
     }
 }
