@@ -15,10 +15,22 @@ namespace ProgramTracker
         public List<string> WhitelistProcesses { get; set; } = new List<string>();
         public Dictionary<string, string> ProcessNameOverride { get; set; } = new Dictionary<string, string>();
         /// <summary>
+        /// Key: Master process name.  Value: Other processes that will start tracking the master process.
+        /// </summary>
+        public Dictionary<string, List<string>> AlternateProcessNames { get; set; } = new Dictionary<string, List<string>>();
+        /// <summary>
         /// Key: name of group Value: list of processes in the group
         /// </summary>
         public Dictionary<string, List<string>> ProgramGroups { get; set; } = new Dictionary<string, List<string>>();
         public bool StartMinimized { get; set; } = false;
+        public bool AcknowledgedNonAdminMessage { get; set; } = false;
+        public SortOrderType SortOrder { get; set; } = SortOrderType.Alphabetical;
+
+
+        public Settings()
+        {
+            WhitelistProcesses.Add(Process.GetCurrentProcess().ProcessName);
+        }
 
 
         /// <summary></summary>
@@ -85,12 +97,60 @@ namespace ProgramTracker
         }
 
 
+        /// <summary></summary>
+        /// <returns>Returns true if process was successfully added.</returns>
+        public bool AddAlternateProccessName(string masterProcess, string childProcess)
+        {
+            AlternateProcessNames.TryGetValue(childProcess, out List<string> existingChildProcesses);
+
+            bool success = false;
+
+            if (AlternateProcessNames.TryGetValue(masterProcess, out var list))
+            {
+                if (list.AddWithoutDupes(childProcess))
+                    success = true;
+            }
+            else
+            {
+                AlternateProcessNames[masterProcess] = new List<string> { childProcess };
+
+                success = true;
+            }
+
+            if (success && existingChildProcesses != null)
+            {
+                foreach (string item in existingChildProcesses)
+                    AlternateProcessNames[masterProcess].AddWithoutDupes(item);
+
+                AlternateProcessNames.Remove(childProcess);
+            }
+
+            return success;
+        }
+        public void RemoveAlternateProcessName(string masterProcess, string childProcess)
+        {
+            if (AlternateProcessNames.TryGetValue(masterProcess, out var list))
+            {
+                list.Remove(childProcess);
+                if (list.Count == 0)
+                    AlternateProcessNames.Remove(masterProcess);
+
+                Frm_Main.MasterTracker.ProcessTrackers.Remove(childProcess);
+                Frm_Main.MainForm.ForceReloadProcesses = true;
+            }
+        }
+
+
         public static string GetSettingsDirectory()
         {
             if (Debugger.IsAttached)
                 return Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Program Tracker\\Debugging Items");
             else
                 return Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Program Tracker");
+        }
+        public static string GetIconsDirectory()
+        {
+            return Path.Combine(GetSettingsDirectory(), "Icons");
         }
 
         public void SetProcessDisplayName(string procName, string displayName)

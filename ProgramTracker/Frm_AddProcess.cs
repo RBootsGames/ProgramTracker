@@ -93,11 +93,13 @@ namespace ProgramTracker
         {
             foreach (var p in selected)
             {
-                if (!Frm_Main.ProgSettings.WhitelistProcesses.Contains(p) &&
-                    !Frm_Main.MasterTracker.ProcessTrackers.ContainsKey(p))
+                if (!Frm_Main.ProgSettings.WhitelistProcesses.Contains(p)/* &&
+                    !Frm_Main.MasterTracker.ProcessTrackers.ContainsKey(p)*/)
                     Frm_Main.ProgSettings.WhitelistProcesses.Add(p);
 
+                Frm_Main.ProgSettings.IgnoreList.Remove(p);
             }
+
             Frm_Main.ProgSettings.Save();
             Close();
         }

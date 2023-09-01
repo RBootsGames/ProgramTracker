@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
+using System.Diagnostics;
 
 namespace ProgramTracker
 {
@@ -26,14 +31,14 @@ namespace ProgramTracker
                 return input;
 
             StringBuilder output = new StringBuilder();
-            output.Append(input[0]);
+            output.Append(input.ToUpper()[0]);
 
             for (int i = 1; i < input.Length; i++)
             {
                 char c = input[i];
-                if (char.IsUpper(c) && !char.IsUpper(input[i-1]) && input[i-1] != ' ')
+                if (char.IsUpper(c) && !char.IsUpper(input[i - 1]) && input[i - 1] != ' ')
                     output.Append(' ');
-                else if (char.IsDigit(input[i]) && !char.IsDigit(input[i-1]))
+                else if (char.IsDigit(input[i]) && !char.IsDigit(input[i - 1]))
                     output.Append(' ');
 
                 output.Append(c);
@@ -42,7 +47,7 @@ namespace ProgramTracker
             return output.ToString().Trim();
         }
 
-        public static Dictionary<K, V> Sort<K, V>(this Dictionary<K,V> input)
+        public static Dictionary<K, V> Sort<K, V>(this Dictionary<K, V> input)
         {
             var sorted = new Dictionary<K, V>(input.Count);
             var keys = input.Keys.ToList();
@@ -75,7 +80,7 @@ namespace ProgramTracker
         /// Example:
         /// 2 days 03:02:01
         /// </summary>
-        public static string DurationToString(this TimeSpan ts, bool singleLine=false)
+        public static string DurationToString(this TimeSpan ts, bool singleLine = false)
         {
             string txt = "";
             char newLine = (!singleLine) ? '\n' : ' ';
@@ -116,7 +121,7 @@ namespace ProgramTracker
         /// <typeparam name="T"></typeparam>
         /// <param name="parentLevel">The number of times a parent of type <typeparamref name="T"/> needs to be found.</param>
         /// <returns></returns>
-        public static T GetParentOfType<T>(this Control input, int parentLevel=1) where T : Control
+        public static T GetParentOfType<T>(this Control input, int parentLevel = 1) where T : Control
         {
             T correctParent = null;
             Control tempParent = input.Parent;
@@ -134,5 +139,87 @@ namespace ProgramTracker
 
             return correctParent;
         }
+
+        public static void SaveIconFromExe(Process process, bool overwriteExistingIcon = false, bool showErrorMessage = false)
+        {
+            try
+            {
+                SaveIconFromExe(process.ProcessName, process.MainModule.FileName, overwriteExistingIcon, showErrorMessage);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                if (showErrorMessage)
+                    MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        public static void SaveIconFromExe(string processName, string exePath, bool overwriteExistingIcon=false, bool showErrorMessage=false)
+        {
+            string iconPath = Path.Combine(Settings.GetIconsDirectory(), processName + ".png");
+            if (overwriteExistingIcon || !File.Exists(iconPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(Settings.GetIconsDirectory());
+                    Bitmap icon = Icon.ExtractAssociatedIcon(exePath).ToBitmap();
+                    icon.Save(iconPath, ImageFormat.Png);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    if (showErrorMessage)
+                        MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        public static void SaveIconFromImage(string processName, Image image)
+        {
+            string iconPath = Path.Combine(Settings.GetIconsDirectory(), processName + ".png");
+
+
+            try
+            {
+                Directory.CreateDirectory(Settings.GetIconsDirectory());
+
+                Image resized = ResizeImage(image, 32);
+                resized.Save(iconPath, ImageFormat.Png);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        public static Image ResizeImage(Image currentImage, int heightWidth)
+        {
+            if (currentImage.Width == heightWidth && currentImage.Height == heightWidth) 
+                return currentImage;
+
+            Rectangle destRect = new Rectangle(0, 0, heightWidth, heightWidth);
+            Bitmap resized = new Bitmap(heightWidth, heightWidth);
+
+            using (Graphics g = Graphics.FromImage(resized))
+            {
+                g.CompositingMode = CompositingMode.SourceCopy;
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    g.DrawImage(currentImage,
+                                destRect,
+                                0, 0, currentImage.Width, currentImage.Height,
+                                GraphicsUnit.Pixel);
+                }
+
+            }
+
+            return resized;
+        }
+
     }
 }

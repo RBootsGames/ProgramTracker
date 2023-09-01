@@ -28,6 +28,49 @@ namespace ProgramTracker
 
         internal bool FoundInSearch = true;
 
+        public List<string> Groups
+        {
+            set
+            {
+                pnl_Groups.Controls.Clear();
+                value.Sort();
+                value.Reverse();
+
+                foreach (var group in value)
+                {
+                    Label lbl = new Label()
+                    {
+                        Text = group,
+                        Dock = DockStyle.Left,
+                        AutoSize = true,
+                        BorderStyle= BorderStyle.FixedSingle,
+                    };
+
+                    lbl.Click += ControlClickEvent;
+                    lbl.MouseEnter += ControlMouseEnter;
+                    lbl.MouseHover += ControlMouseHover;
+                    lbl.MouseLeave += ControlMouseLeave;
+
+                    pnl_Groups.Controls.Add(lbl);
+                }
+
+                if (value.Count > 0 && pnl_Groups.Visible == false)
+                {
+                    Height += pnl_Groups.Height;
+                    pnl_Groups.Visible = true;
+                    //lbl_DisplayName.TextAlign = ContentAlignment.BottomCenter;
+                    //lbl_Proc.TextAlign = ContentAlignment.BottomCenter;
+                }
+                else if (value.Count == 0 && pnl_Groups.Visible == true)
+                {
+                    Height -= pnl_Groups.Height;
+                    pnl_Groups.Visible = false;
+                    //lbl_DisplayName.TextAlign = ContentAlignment.MiddleCenter;
+                    //lbl_Proc.TextAlign = ContentAlignment.MiddleCenter;
+                }
+            }
+        }
+
         [Category("Item Settings")]
         public string ProcessName
         {
@@ -177,6 +220,8 @@ namespace ProgramTracker
             Duration = (_duration == null) ? TimeSpan.Zero : (TimeSpan)_duration;
             DisplayName = _displayName;
             Dock = DockStyle.Top;
+
+            Groups = new List<string>();
         }
 
 
@@ -241,7 +286,7 @@ namespace ProgramTracker
                 SettingClick(this, e);
         }
 
-        private void lbl_DisplayName_MouseHover(object sender, EventArgs e)
+        private void ControlMouseHover(object sender, EventArgs e)
         {
             if (OnlyShowIcon)
                 toolTip1.SetToolTip(sender as Control, (!string.IsNullOrEmpty(DisplayName)) ? DisplayName : ProcessName.ToPrettyString());

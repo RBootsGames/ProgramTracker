@@ -17,11 +17,13 @@ namespace ProgramTracker
 
         public string ReturnText = "";
         public bool TextWasChanged => l_TextChanged;
+        public Tracker SelectedTracker;
 
 
-        public Frm_PopupTextbox(string labelText, string windowTitle, string startingText="", string acceptButtonText="Save")
+        public Frm_PopupTextbox(string labelText, string windowTitle, string startingText="", string acceptButtonText="Save", Tracker selection=null)
         {
             InitializeComponent();
+            SelectedTracker = selection;
             this.Text = windowTitle;
             btn_Accept.Text = acceptButtonText;
 

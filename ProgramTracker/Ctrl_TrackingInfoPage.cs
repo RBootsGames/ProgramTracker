@@ -72,50 +72,6 @@ namespace ProgramTracker
             groupedTimeEntries.Reverse();
 
 
-            /* 
-            This can probably be removed
-            //DateTime currentDateRange = TrackingData.TimeMarkers.First().StartTime.Date;
-            //var tempTimeEntries = new List<TrackingPoint>();
-            //bool firstDateInRange = true;
-
-            //foreach (TrackingPoint point in TrackingData.TimeMarkers)
-            //{
-            //    if (point.StartTime.Date == currentDateRange && point != TrackingData.TimeMarkers.Last())
-            //    {
-            //        tempTimeEntries.Add(point);
-            //        firstDateInRange = false;
-            //    }
-            //    else
-            //    {
-            //        firstDateInRange = point.StartTime.Date != currentDateRange;
-
-            //        if (point == TrackingData.TimeMarkers.Last())
-            //        {
-            //            if (firstDateInRange)
-            //            {
-            //                groupedTimeEntries.Add(new Ctrl_CollapsibleTimeEntries(new List<TrackingPoint>(tempTimeEntries), false, true));
-            //                tempTimeEntries.Clear();
-            //            }
-
-            //            tempTimeEntries.Add(point);
-            //            var meh = new Ctrl_CollapsibleTimeEntries(new List<TrackingPoint>(tempTimeEntries), true, false);
-            //            groupedTimeEntries.Add(meh);
-            //            l_MostRecent = meh.GetMostRecentEntry();
-            //            TrackingData.SetMostRecentEntry(meh.GetMostRecentEntry());
-                        
-            //        }
-            //        else
-            //        {
-            //            groupedTimeEntries.Add(new Ctrl_CollapsibleTimeEntries(new List<TrackingPoint>(tempTimeEntries), false, true));
-
-            //            tempTimeEntries.Clear();
-            //            firstDateInRange = true;
-            //            tempTimeEntries.Add(point);
-            //            currentDateRange = point.StartTime.Date;
-            //        }
-            //    }
-            //}
-            */
 
             pnl_Main.Controls.Clear();
 
@@ -123,6 +79,16 @@ namespace ProgramTracker
             pnl_Main.Controls.AddRange(groupedTimeEntries.ToArray());
 
             TrackingData.ItemUpdated += OnTrackerUpdated;
+        }
+
+        public void SetIcon(Bitmap icon)
+        {
+            pict_Icon.Image = icon;
+        }
+
+        public void SetTitle(string title)
+        {
+            lbl_Title.Text = title;
         }
 
         public Ctrl_TimeEntry GetMostRecentEntry() => l_MostRecent;
@@ -227,6 +193,15 @@ namespace ProgramTracker
             
         }
 
+        public void CloseTrackingWindow()
+        {
+            TrackingData.GetFormControl().IsSelected = false;
+            var scrollPoint = Frm_Main.MainForm.pnl_TrackedProgs.AutoScrollPosition;
+            this.Visible = false;
+            TrackingData.ItemUpdated -= OnTrackerUpdated;
+            Frm_Main.MainForm.MakeItemListFullscreen(scrollPoint);
+        }
+
 
         private void btn_AddEntry_Click(object sender, EventArgs e)
         {
@@ -268,11 +243,7 @@ namespace ProgramTracker
 
         private void btn_Exit_Click(object sender, EventArgs e)
         {
-            TrackingData.GetFormControl().IsSelected = false;
-            var scrollPoint = Frm_Main.MainForm.pnl_TrackedProgs.AutoScrollPosition;
-            this.Visible = false;
-            TrackingData.ItemUpdated -= OnTrackerUpdated;
-            Frm_Main.MainForm.MakeItemListFullscreen(scrollPoint);
+            CloseTrackingWindow();
         }
 
 
