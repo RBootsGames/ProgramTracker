@@ -20,6 +20,8 @@ namespace ProgramTracker
         /// Hourly doesn't work with the chart correctly by default.
         /// </summary>
         Granularity graphGranularity = Granularity.Day;
+        SeriesChartType graphType = SeriesChartType.Column;
+
 
         Dictionary<string, bool> itemSelections = new Dictionary<string, bool>();
         Dictionary<string, Tracker> itemTrackers = new Dictionary<string, Tracker>();
@@ -27,7 +29,9 @@ namespace ProgramTracker
         public Frm_Graph()
         {
             InitializeComponent();
-            Console.WriteLine(granSelector.SelectedIndex);
+
+            graphTypeSelector.SelectedIndex = 0;
+            granSelector.SelectedIndex = 2;
 
 
             date_Start.Value = ((ProgSettings.UseFilterDateStart) ? ProgSettings.FilterDateStart : MasterTracker.GetOldestDate()).StartOfDay();
@@ -99,20 +103,19 @@ namespace ProgramTracker
                    .ToList();
         }
 
-        SeriesChartType GetChartType()
-        {
-            return (SeriesChartType)Enum.Parse(typeof(SeriesChartType), graphTypeSelector.Text, true);
-        }
+        //SeriesChartType GetChartType()
+        //{
+        //    return (SeriesChartType)Enum.Parse(typeof(SeriesChartType), graphTypeSelector.Text, true);
+        //}
 
         void GraphData()
         {
             dataChart.Series.Clear();
             lbl_DurationLabels.Text = string.Empty;
             List<string> selections = GetSelectedItems();
-            SeriesChartType chartType = GetChartType();
 
-            if (chartType == SeriesChartType.Pie || chartType == SeriesChartType.Doughnut ||
-                chartType == SeriesChartType.Funnel || chartType == SeriesChartType.Pyramid)
+            if (graphType == SeriesChartType.Pie || graphType == SeriesChartType.Doughnut ||
+                graphType == SeriesChartType.Funnel || graphType == SeriesChartType.Pyramid)
             {
                 var graphData = CreateSeriesObject("Programs");
                 //graphData.Label = "#VALX (#VAL hours)";
@@ -207,7 +210,7 @@ namespace ProgramTracker
         Series CreateSeriesObject(string seriesName)
         {
             Series s = new Series(seriesName);
-            s.ChartType = GetChartType();
+            s.ChartType = graphType;
 
             //s.ChartType = SeriesChartType.Line;
             //s.ChartType = SeriesChartType.Spline;
@@ -218,6 +221,7 @@ namespace ProgramTracker
 
         private void graphTypeSelector_SelectedIndexChanged(object sender, EventArgs e)
         {
+            graphType = (SeriesChartType)Enum.Parse(typeof(SeriesChartType), graphTypeSelector.Text, true);
             GraphData();
             //if (GetChartType() == SeriesChartType.Pie || GetChartType() == SeriesChartType.Doughnut)
             //{

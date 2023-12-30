@@ -37,6 +37,7 @@
             this.pnl_Left = new System.Windows.Forms.Panel();
             this.pnl_LeftTop = new System.Windows.Forms.Panel();
             this.btn_Update = new System.Windows.Forms.Button();
+            this.searchBar = new ProgramTracker.TextBoxModified();
             this.dataChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.pnl_Top = new System.Windows.Forms.Panel();
             this.graphTypeSelector = new System.Windows.Forms.ComboBox();
@@ -49,7 +50,6 @@
             this.date_Start = new System.Windows.Forms.DateTimePicker();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.lbl_DurationLabels = new System.Windows.Forms.Label();
-            this.searchBar = new ProgramTracker.TextBoxModified();
             this.pnl_Left.SuspendLayout();
             this.pnl_LeftTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataChart)).BeginInit();
@@ -102,6 +102,19 @@
             this.btn_Update.UseVisualStyleBackColor = true;
             this.btn_Update.Click += new System.EventHandler(this.UpdateGraph_Event);
             // 
+            // searchBar
+            // 
+            this.searchBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.searchBar.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.searchBar.Location = new System.Drawing.Point(0, 0);
+            this.searchBar.Name = "searchBar";
+            this.searchBar.RealText = "";
+            this.searchBar.Size = new System.Drawing.Size(276, 22);
+            this.searchBar.TabIndex = 0;
+            this.searchBar.TextPlaceholder = null;
+            this.searchBar.TextPlaceholderColor = System.Drawing.Color.Gray;
+            this.searchBar.TextChangedFixed += new System.EventHandler(this.searchBar_TextChangedFixed);
+            // 
             // dataChart
             // 
             chartArea1.AxisY.Title = "Hours";
@@ -143,6 +156,7 @@
             // 
             // graphTypeSelector
             // 
+            this.graphTypeSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.graphTypeSelector.FormattingEnabled = true;
             this.graphTypeSelector.Items.AddRange(new object[] {
             "Column",
@@ -162,7 +176,6 @@
             this.graphTypeSelector.Name = "graphTypeSelector";
             this.graphTypeSelector.Size = new System.Drawing.Size(140, 24);
             this.graphTypeSelector.TabIndex = 7;
-            this.graphTypeSelector.Text = "Column";
             this.graphTypeSelector.SelectedIndexChanged += new System.EventHandler(this.graphTypeSelector_SelectedIndexChanged);
             // 
             // label4
@@ -185,6 +198,7 @@
             // 
             // granSelector
             // 
+            this.granSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.granSelector.FormattingEnabled = true;
             this.granSelector.Items.AddRange(new object[] {
             "Month",
@@ -194,7 +208,6 @@
             this.granSelector.Name = "granSelector";
             this.granSelector.Size = new System.Drawing.Size(140, 24);
             this.granSelector.TabIndex = 4;
-            this.granSelector.Text = "Day";
             this.granSelector.SelectedIndexChanged += new System.EventHandler(this.granSelector_SelectedIndexChanged);
             // 
             // label2
@@ -251,19 +264,6 @@
             this.lbl_DurationLabels.Size = new System.Drawing.Size(661, 35);
             this.lbl_DurationLabels.TabIndex = 5;
             this.lbl_DurationLabels.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
-            // 
-            // searchBar
-            // 
-            this.searchBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.searchBar.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.searchBar.Location = new System.Drawing.Point(0, 0);
-            this.searchBar.Name = "searchBar";
-            this.searchBar.RealText = "";
-            this.searchBar.Size = new System.Drawing.Size(276, 22);
-            this.searchBar.TabIndex = 0;
-            this.searchBar.TextPlaceholder = null;
-            this.searchBar.TextPlaceholderColor = System.Drawing.Color.Gray;
-            this.searchBar.TextChangedFixed += new System.EventHandler(this.searchBar_TextChangedFixed);
             // 
             // Frm_Graph
             // 
