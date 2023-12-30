@@ -119,6 +119,8 @@ namespace ProgramTracker
         internal TrackingPoint GetTrackingPoint() => trackingPoint;
 
 
+        public TimeSpan GetDuration() => l_Duration;
+
         public void CalculateDuration(bool calledFromEvent=false)
         {
             if (l_StartTime == null)
@@ -128,7 +130,8 @@ namespace ProgramTracker
             }
             else
             {
-                lbl_Duration.Text = trackingPoint.GetDuration(true).DurationToString(true);
+                l_Duration = trackingPoint.GetDuration(true, true);
+                lbl_Duration.Text = l_Duration.DurationToString(true);
 
                 // This should only be used to update the header of this collapsible control
                 if (!calledFromEvent && trackingPoint.StopTime == null)

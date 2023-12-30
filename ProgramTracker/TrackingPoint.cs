@@ -46,6 +46,30 @@ namespace ProgramTracker
             }
         }
 
+        internal bool IsFilteredOut
+        {
+            get
+            {
+                // if not using a filter
+                if (!Frm_Main.ProgSettings.UseFilterDateStart && !Frm_Main.ProgSettings.UseFilterDateEnd)
+                    return false;
+
+                // is running and end date not used
+                if (!Frm_Main.ProgSettings.UseFilterDateEnd && IsRunning)
+                    return false;
+                // using end date and start is after
+                if (Frm_Main.ProgSettings.UseFilterDateEnd && StartTime >= Frm_Main.ProgSettings.FilterDateEnd)
+                    return true;
+                // using start date and end is before
+                if (Frm_Main.ProgSettings.UseFilterDateStart && StopTime <= Frm_Main.ProgSettings.FilterDateStart)
+                    return true;
+
+                return false;
+                //return ((Frm_Main.ProgSettings.UseFilterDateEnd && StartTime >= Frm_Main.ProgSettings.FilterDateEnd) ||
+                //        (Frm_Main.ProgSettings.UseFilterDateStart && StopTime <= Frm_Main.ProgSettings.FilterDateStart));
+            }
+        }
+
         internal bool IsRunning => StopTime == null;
 
         public event EventHandler StoppedTracking;
@@ -77,10 +101,61 @@ namespace ProgramTracker
             return clone;
         }
 
-        internal TimeSpan GetDuration(bool calculateIfActive=false)
+        internal TimeSpan GetDuration(bool calculateIfActive=false, bool useTimeFilter=false)
         {
-            return (!IsRunning) ? (DateTime)StopTime - StartTime :
-                (calculateIfActive) ? DateTime.Now - StartTime : TimeSpan.Zero;
+            if (useTimeFilter)
+            {
+                DateTime? start = GetStartTimeFiltered();
+                DateTime? end = GetEndTimeFiltered();
+
+                // start or end should only be null if the time range is outside of the filter
+                if (!start.HasValue || !end.HasValue)
+                    return TimeSpan.Zero;
+
+
+                return (!IsRunning) ? (DateTime)end - (DateTime)start :
+                    (calculateIfActive) ? DateTime.Now - (DateTime)start : TimeSpan.Zero;
+            }
+            else
+            {
+                return (!IsRunning) ? (DateTime)StopTime - StartTime :
+                    (calculateIfActive) ? DateTime.Now - StartTime : TimeSpan.Zero;
+            }
+        }
+
+
+        /// <summary>
+        /// This will adjust the start time in order to fit within the time filter parameters.
+        /// </summary>
+        /// <returns>Will return null if the time entry is filtered out.</returns>
+        public DateTime? GetStartTimeFiltered()
+        {
+            if (IsFilteredOut)
+                return null;
+            else if (Frm_Main.ProgSettings.UseFilterDateStart == false)
+                return StartTime;
+            else if (StartTime < Frm_Main.ProgSettings.FilterDateStart)
+                return Frm_Main.ProgSettings.FilterDateStart;
+            else
+                return StartTime;
+        }
+
+        /// <summary>
+        /// This will adjust the end time in order to fit within the time filter parameters.
+        /// </summary>
+        /// <returns>Will return null if the time entry is filtered out.</returns>
+        public DateTime? GetEndTimeFiltered()
+        {
+            if (IsRunning)
+                return DateTime.Now;
+            else if (IsFilteredOut)
+                return null;
+            else if (Frm_Main.ProgSettings.UseFilterDateEnd == false)
+                return StopTime;
+            else if (StopTime > Frm_Main.ProgSettings.FilterDateEnd)
+                return Frm_Main.ProgSettings.FilterDateEnd;
+            else
+                return StopTime;
         }
 
 
@@ -93,8 +168,9 @@ namespace ProgramTracker
 
             foreach (TrackingPoint point in entries)
             {
-                duration += (!point.IsRunning) ? (DateTime)point.StopTime - point.StartTime:
-                    DateTime.Now - point.StartTime;
+                duration += point.GetDuration(useTimeFilter: true);
+                //duration += (!point.IsRunning) ? (DateTime)point.StopTime - point.StartTime:
+                //    DateTime.Now - point.StartTime;
             }
 
             return duration;

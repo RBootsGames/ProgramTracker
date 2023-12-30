@@ -9,7 +9,6 @@ using System.Windows.Forms;
 
 namespace ProgramTracker
 {
-
     public class Tracker
     {
         public string ProcessName { get; set; }
@@ -52,7 +51,7 @@ namespace ProgramTracker
             var p = new TrackingPoint(startTime, parent:this);
             p.UpdatedTracker += OnItemUpdated;
             TimeMarkers.Add(p);
-            TrackingFormControl = (_trackingForm != null) ? _trackingForm : new Ctrl_TrackingItem(ProcessName, this, _displayName:GetDisplayName());
+            TrackingFormControl = (_trackingForm != null) ? _trackingForm : new Ctrl_TrackingItem(ProcessName, this, _displayName:GetDisplayNameOverride());
             //TrackingFormControl.Dock = DockStyle.Top;
 
             TrackingFormControl.Icon = GetSavedIcon();
@@ -86,8 +85,9 @@ namespace ProgramTracker
 
         /// <summary>
         /// The display name is defined within the program settings, so this gets it from there.
+        /// Use GetVisibleName() if you don't know if this has a custom display name.
         /// </summary>
-        public string GetDisplayName()
+        public string GetDisplayNameOverride()
         {
             if (Frm_Main.ProgSettings != null)
             {
@@ -103,7 +103,7 @@ namespace ProgramTracker
         /// <summary>Returns the display name if the control has one, otherwise returns the process name.</summary>
         public string GetVisibleName()
         {
-            var a = GetDisplayName();
+            var a = GetDisplayNameOverride();
             return (string.IsNullOrEmpty(a)) ? ProcessName.ToPrettyString() : a;
         }
 
@@ -139,7 +139,7 @@ namespace ProgramTracker
             if (updateControl)
             {
                 TrackingFormControl.ProcessName = ProcessName;
-                TrackingFormControl.DisplayName = GetDisplayName();
+                TrackingFormControl.DisplayName = GetDisplayNameOverride();
                 GetDuration();
                 TrackingFormControl.Icon = GetSavedIcon();
 
@@ -186,7 +186,7 @@ namespace ProgramTracker
                 TrackingPoint p = new TrackingPoint(startTime, parent:this);
                 p.UpdatedTracker += OnItemUpdated;
 
-                TimeMarkers.Add(p);
+                TimeMarkers.Add(p);                
             }
 
             if (TrackingFormControl.Icon == null)
@@ -206,7 +206,7 @@ namespace ProgramTracker
             TimeSpan time = TimeSpan.Zero;
 
             foreach (TrackingPoint point in TimeMarkers)
-                time+= point.GetDuration();
+                time+= point.GetDuration(useTimeFilter:true);
 
             if (TimeMarkers.Count > 0)
             {
@@ -216,7 +216,29 @@ namespace ProgramTracker
             }
 
             TrackingFormControl.Duration = time;
+            TrackingFormControl.IsGrayedOut = (time ==  TimeSpan.Zero && !IsRunning);
             return time;
+        }
+
+        public DateTime GetOldestDate() => TimeMarkers[0].StartTime;
+
+        /// <summary>
+        /// This will return a list of tracking points as long as their start times fall within the date range.
+        /// </summary>
+        public List<TrackingPoint> GetDatesWithinRange(DateTime start, DateTime end)
+        {
+            List<TrackingPoint> result = new List<TrackingPoint>();
+
+            // data should already be ordered from oldest to newest
+            foreach (TrackingPoint point in TimeMarkers)
+            {
+                if (point.StartTime >= start && point.StartTime <= end)
+                    result.Add(point);
+                else if (point.StartTime > end)
+                    break;
+            }
+
+            return result;
         }
 
         /// <summary>

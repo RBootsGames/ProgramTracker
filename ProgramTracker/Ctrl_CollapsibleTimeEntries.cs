@@ -12,6 +12,8 @@ namespace ProgramTracker
 {
     public partial class Ctrl_CollapsibleTimeEntries : UserControl
     {
+        bool l_IsGrayedOut = false;
+        TimeSpan l_Duration;
         DateTime l_DateOfEntries;
         bool isMouseOver = false;
         bool isCollapsed = false;
@@ -26,10 +28,18 @@ namespace ProgramTracker
             {
                 l_DateOfEntries = value;
                 lbl_StartDate.Text = l_DateOfEntries.ToString("MM/dd/yyyy");
-                //lbl_StartDate.Text = l_DateOfEntries.Date.ToString("MM/dd/yyyy");
             }
         }
 
+        public bool IsGrayedOut
+        {
+            get => l_IsGrayedOut;
+            set
+            {
+                l_IsGrayedOut = value;
+                ApplyBGColor();
+            }
+        }
         //internal Tracker TrackingData;
 
         //[Category("Item Settings")]
@@ -43,9 +53,6 @@ namespace ProgramTracker
         public event EventHandler TrackingPointUpdated;
 
 
-        //internal Ctrl_CollapsibleTimeEntries(DateTime startRange, Tracker trackingData, DateTime? endRange=null, bool collapsed=false)
-        //internal Ctrl_CollapsibleTimeEntries(TrackingPoint singleEntry, bool latestEntry = false, bool startCollapsed = true)
-        //                              : this(new List<TrackingPoint>() { singleEntry }, latestEntry, startCollapsed) { }
         internal Ctrl_CollapsibleTimeEntries(List<TrackingPoint> entries, bool latestEntry=false, bool startCollapsed=true)
         {
             InitializeComponent();
@@ -54,7 +61,8 @@ namespace ProgramTracker
             //lbl_StartDate.Text = entries.First().StartTime.Date.ToString("MM/dd/yyyy");
             DateOfEntries = entries.First().StartTime.Date;
 
-            lbl_Duration.Text = TrackingPoint.GetDuration(entries.ToArray()).DurationToString(true);
+            l_Duration = TrackingPoint.GetDuration(entries.ToArray());
+            lbl_Duration.Text = l_Duration.DurationToString(true);
 
             trackingPoints = entries;
             hasLatestEntry = latestEntry;
@@ -76,6 +84,11 @@ namespace ProgramTracker
             {
                 entryCtrl.TimeEntriesMerged += OnTimeEntryMerged;
                 entryCtrl.StartStopUpdated += OnEntryUpdated;
+
+                if (entryCtrl.GetDuration() == TimeSpan.Zero)
+                {
+                    entryCtrl.BackColor = Color.Gainsboro;
+                }
             }
 
             pnl_Contents.Controls.AddRange(tempList);
@@ -90,11 +103,16 @@ namespace ProgramTracker
         private List<Ctrl_TimeEntry> GetTimeEntryControls() => pnl_Contents.Controls.OfType<Ctrl_TimeEntry>().ToList();
 
 
+        public TimeSpan GetDuration() => l_Duration;
+
         private void ReCalculateDuration()
         {
             this.UpdateOnThread(() =>
             {
-                lbl_Duration.Text = TrackingPoint.GetDuration(trackingPoints.ToArray()).DurationToString(true);
+                l_Duration = TrackingPoint.GetDuration(trackingPoints.ToArray());
+                lbl_Duration.Text = l_Duration.DurationToString(true);
+
+                //lbl_Duration.Text = TrackingPoint.GetDuration(trackingPoints.ToArray()).DurationToString(true);
             });
             this.GetParentOfType<Ctrl_TrackingInfoPage>().UpdateTimeDuration();
         }
@@ -196,6 +214,15 @@ namespace ProgramTracker
                 BackColor = Color.LightGray;
             else
                 BackColor = DefaultBackColor;
+
+            if (IsGrayedOut)
+            {
+                Color c = BackColor;
+                BackColor = Color.FromArgb(
+                    (int)(c.R * .9),
+                    (int)(c.G * .9),
+                    (int)(c.B * .9));
+            }
         }
 
         

@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.IO;
 using System.Diagnostics;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace ProgramTracker
 {
-    internal class Settings
+    public class Settings
     {
         public List<string> IgnoreList { get; set; } = new List<string>();
         public List<string> WhitelistProcesses { get; set; } = new List<string>();
@@ -26,10 +27,20 @@ namespace ProgramTracker
         public bool AcknowledgedNonAdminMessage { get; set; } = false;
         public SortOrderType SortOrder { get; set; } = SortOrderType.Alphabetical;
 
+        #region Date Filter
+        public bool UseFilterDateStart { get; set; } = false;
+        public bool UseFilterDateEnd { get; set; } = false;
+        public bool ShowFilteredOutDateEntries { get; set; } = false;
+        public DateTime FilterDateStart { get; set; }
+        public DateTime FilterDateEnd { get; set; }
+        #endregion
 
         public Settings()
         {
             WhitelistProcesses.Add(Process.GetCurrentProcess().ProcessName);
+
+            FilterDateStart = new DateTime(2000, 1, 1);
+            FilterDateEnd = DateTime.Now;
         }
 
 
@@ -60,6 +71,7 @@ namespace ProgramTracker
             if (loadPath == "")
                 loadPath = Settings.GetSettingsDirectory();
 
+            // directory not found
             if (!Directory.Exists(loadPath))
             {
                 Console.Error.WriteLine($"'{loadPath}' doesn't exist.");
@@ -68,6 +80,7 @@ namespace ProgramTracker
 
             loadPath = Path.Combine(loadPath, "settings.ini");
 
+            // settings not found
             if (!File.Exists(loadPath))
             {
                 Console.Error.WriteLine($"'{loadPath}' doesn't exist.");
@@ -138,6 +151,31 @@ namespace ProgramTracker
                 Frm_Main.MasterTracker.ProcessTrackers.Remove(childProcess);
                 Frm_Main.MainForm.ForceReloadProcesses = true;
             }
+        }
+
+        public string RangeToString()
+        {
+            string s = "";
+
+            if (!UseFilterDateStart && !UseFilterDateEnd)
+                return "All Dates";
+
+            s += (UseFilterDateStart) ? FilterDateStart.ToString("d") : "Beginning";
+
+            if (UseFilterDateStart && UseFilterDateEnd && FilterDateStart.ToShortDateString() == FilterDateEnd.ToShortDateString())
+            {
+                s += $" {FilterDateStart.TimeOfDay.Hours}:{FilterDateStart.TimeOfDay.Minutes}";
+            }
+            s += " - ";
+
+            if (UseFilterDateEnd && UseFilterDateStart && FilterDateStart.ToShortDateString() == FilterDateEnd.ToShortDateString())
+            {
+                s += $" {FilterDateEnd.TimeOfDay.Hours}:{FilterDateEnd.TimeOfDay.Minutes}";
+            }
+            else
+                s += (UseFilterDateEnd) ? FilterDateEnd.ToString("d") : "Present";
+
+            return s;
         }
 
 

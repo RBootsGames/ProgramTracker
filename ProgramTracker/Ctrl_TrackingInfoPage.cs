@@ -35,8 +35,11 @@ namespace ProgramTracker
             return text;
         }
 
+        internal void ReloadData() => LoadData(TrackingData);
         internal void LoadData(Tracker trackingData)
         {
+            pnl_Main.Controls.Clear();
+
             TrackingData = trackingData;
 
             lbl_Title.Text = TrackingData.GetVisibleName();
@@ -48,7 +51,12 @@ namespace ProgramTracker
             //var groupedByDays = TrackingData.TimeMarkers.GroupBy(x => x.StartTime.Date).Reverse().ToList();
             GroupedPoints.Clear();
             GroupedPoints = new SortedDictionary<DateTime, List<TrackingPoint>>(
-                            TrackingData.TimeMarkers.GroupBy(x => x.StartTime.Date).ToDictionary(x => x.Key, x => x.ToList()));
+                    TrackingData.TimeMarkers.Where(x =>
+                    {
+                        return Frm_Main.ProgSettings.ShowFilteredOutDateEntries || !x.IsFilteredOut;
+                    })
+                    .GroupBy(x => x.StartTime.Date).ToDictionary(x => x.Key, x => x.ToList())
+                );
 
 
             var groupedTimeEntries = new List<Ctrl_CollapsibleTimeEntries>();
@@ -61,6 +69,7 @@ namespace ProgramTracker
                 var ctrl = new Ctrl_CollapsibleTimeEntries(new List<TrackingPoint>(GroupedPoints[key]), isFirst, !isFirst);
 
                 groupedTimeEntries.Add(ctrl);
+                ctrl.IsGrayedOut = ctrl.GetDuration() == TimeSpan.Zero;
 
                 if (isFirst)
                 {
@@ -72,8 +81,6 @@ namespace ProgramTracker
             groupedTimeEntries.Reverse();
 
 
-
-            pnl_Main.Controls.Clear();
 
 
             pnl_Main.Controls.AddRange(groupedTimeEntries.ToArray());

@@ -25,6 +25,9 @@ namespace ProgramTracker
                 updates.Invoke();
         }
 
+        /// <summary>
+        /// Capitalizes the first letter, adds spaces before capital letters and adds spaces before numbers
+        /// </summary>
         public static string ToPrettyString(this string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -60,6 +63,15 @@ namespace ProgramTracker
             }
 
             return sorted;
+        }
+
+        public static DateTime StartOfDay(this DateTime date)
+        {
+            return date - date.TimeOfDay;
+        }
+        public static DateTime EndOfDay(this DateTime date)
+        {
+            return (date - date.TimeOfDay) + TimeSpan.FromDays(1) - TimeSpan.FromSeconds(1);
         }
 
         /// <summary></summary>

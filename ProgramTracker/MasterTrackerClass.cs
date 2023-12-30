@@ -8,6 +8,10 @@ namespace ProgramTracker
 {
     internal class MasterTrackerClass
     {
+        /// <summary>
+        /// Key: process name
+        /// Value: tracking data
+        /// </summary>
         public Dictionary<string, Tracker> ProcessTrackers { get; set; } = new Dictionary<string, Tracker>();
 
 
@@ -119,7 +123,7 @@ namespace ProgramTracker
                 //                                .Select(x => x.GetFormControl(true));
 
                 Frm_Main.MainForm.pnl_TrackedProgs.Controls.AddRange(allControls.ToArray());
-                Frm_Main.MainForm.SortEntries();
+                Frm_Main.MainForm.SortAndFilterEntries();
                 Console.WriteLine("Tracking data loaded");
                 return mtc;
             }
@@ -147,6 +151,7 @@ namespace ProgramTracker
                 Frm_Main.MainForm.pnl_TrackedProgs.UpdateOnThread(() =>
                 {
                     Frm_Main.MainForm.pnl_TrackedProgs.Controls.Add(ctrl);
+                    ctrl.CheckboxVisible = true;
                 });
 
                 t.ItemUpdated += OnTrackerUpdate;
@@ -187,6 +192,27 @@ namespace ProgramTracker
         }
 
 
+        public DateTime GetOldestDate()
+        {
+            DateTime oldest = DateTime.MaxValue;
+            foreach (Tracker tracker in ProcessTrackers.Values)
+            {
+                DateTime date = tracker.GetOldestDate();
+                if (date < oldest)
+                    oldest = date;
+            }
+
+            return oldest;
+        }
+
+        public List<TrackingPoint> GetProcessDatesWithinRange(string processName, DateTime start, DateTime end)
+        {
+            if (ProcessTrackers.TryGetValue(processName, out Tracker tracker))
+                return tracker.GetDatesWithinRange(start, end);
+            else
+                return new List<TrackingPoint>();
+        }
+
         public void UpdateAllTimes()
         {
             try
@@ -199,7 +225,7 @@ namespace ProgramTracker
                     if (!updateThese.Contains(item))
                     {
                         item.GetDuration();
-                        updateThese.Add(item);
+                        //updateThese.Add(item);
                     }
                 }
 

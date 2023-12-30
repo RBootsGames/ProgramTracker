@@ -47,10 +47,12 @@
             this.menuEdit_IgnoreList = new System.Windows.Forms.ToolStripMenuItem();
             this.menuEdit_Merge = new System.Windows.Forms.ToolStripMenuItem();
             this.menuEdit_Unmerge = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEdit_DeleteIcons = new System.Windows.Forms.ToolStripMenuItem();
             this.menuEdit_Minimized = new System.Windows.Forms.ToolStripMenuItem();
             this.menuEdit_AutoStart = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuEdit_DeleteIcons = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_Sort = new System.Windows.Forms.ToolStripComboBox();
+            this.menu_TimeRange = new System.Windows.Forms.ToolStripMenuItem();
+            this.menu_ShowGraph = new System.Windows.Forms.ToolStripMenuItem();
             this.taskbarIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.menu_Notify = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -170,14 +172,17 @@
             // 
             // topMenu
             // 
+            this.topMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
             this.topMenu.ImageScalingSize = new System.Drawing.Size(21, 21);
             this.topMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menu_Edit,
-            this.menu_Sort});
+            this.menu_Sort,
+            this.menu_TimeRange,
+            this.menu_ShowGraph});
             this.topMenu.Location = new System.Drawing.Point(0, 0);
             this.topMenu.Name = "topMenu";
             this.topMenu.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
-            this.topMenu.Size = new System.Drawing.Size(669, 33);
+            this.topMenu.Size = new System.Drawing.Size(692, 33);
             this.topMenu.TabIndex = 12;
             this.topMenu.Text = "menuStrip1";
             // 
@@ -188,9 +193,9 @@
             this.menuEdit_IgnoreList,
             this.menuEdit_Merge,
             this.menuEdit_Unmerge,
+            this.menuEdit_DeleteIcons,
             this.menuEdit_Minimized,
-            this.menuEdit_AutoStart,
-            this.menuEdit_DeleteIcons});
+            this.menuEdit_AutoStart});
             this.menu_Edit.Name = "menu_Edit";
             this.menu_Edit.Size = new System.Drawing.Size(50, 29);
             this.menu_Edit.Text = "Edit";
@@ -223,6 +228,13 @@
             this.menuEdit_Unmerge.Text = "Remove alt processes";
             this.menuEdit_Unmerge.Click += new System.EventHandler(this.menuEdit_Unmerge_Click);
             // 
+            // menuEdit_DeleteIcons
+            // 
+            this.menuEdit_DeleteIcons.Name = "menuEdit_DeleteIcons";
+            this.menuEdit_DeleteIcons.Size = new System.Drawing.Size(247, 30);
+            this.menuEdit_DeleteIcons.Text = "Delete unused icons";
+            this.menuEdit_DeleteIcons.Click += new System.EventHandler(this.menuEdit_DeleteIcons_Click);
+            // 
             // menuEdit_Minimized
             // 
             this.menuEdit_Minimized.CheckOnClick = true;
@@ -239,13 +251,6 @@
             this.menuEdit_AutoStart.Text = "Start with Windows";
             this.menuEdit_AutoStart.Click += new System.EventHandler(this.menuEdit_AutoStart_Click);
             // 
-            // menuEdit_DeleteIcons
-            // 
-            this.menuEdit_DeleteIcons.Name = "menuEdit_DeleteIcons";
-            this.menuEdit_DeleteIcons.Size = new System.Drawing.Size(247, 30);
-            this.menuEdit_DeleteIcons.Text = "Delete unused icons";
-            this.menuEdit_DeleteIcons.Click += new System.EventHandler(this.menuEdit_DeleteIcons_Click);
-            // 
             // menu_Sort
             // 
             this.menu_Sort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -255,6 +260,21 @@
             "Most Recent   "});
             this.menu_Sort.Name = "menu_Sort";
             this.menu_Sort.Size = new System.Drawing.Size(151, 29);
+            // 
+            // menu_TimeRange
+            // 
+            this.menu_TimeRange.AccessibleName = "Time Range";
+            this.menu_TimeRange.Name = "menu_TimeRange";
+            this.menu_TimeRange.Size = new System.Drawing.Size(106, 29);
+            this.menu_TimeRange.Text = "Time Range";
+            this.menu_TimeRange.Click += new System.EventHandler(this.menu_TimeRange_Click);
+            // 
+            // menu_ShowGraph
+            // 
+            this.menu_ShowGraph.Name = "menu_ShowGraph";
+            this.menu_ShowGraph.Size = new System.Drawing.Size(110, 29);
+            this.menu_ShowGraph.Text = "Show Graph";
+            this.menu_ShowGraph.Click += new System.EventHandler(this.menu_ShowGraph_Click);
             // 
             // taskbarIcon
             // 
@@ -295,9 +315,9 @@
             this.pnl_TrackedProgs.Controls.Add(this.pnl_Running);
             this.pnl_TrackedProgs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnl_TrackedProgs.Location = new System.Drawing.Point(0, 85);
-            this.pnl_TrackedProgs.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pnl_TrackedProgs.Margin = new System.Windows.Forms.Padding(4);
             this.pnl_TrackedProgs.Name = "pnl_TrackedProgs";
-            this.pnl_TrackedProgs.Size = new System.Drawing.Size(669, 459);
+            this.pnl_TrackedProgs.Size = new System.Drawing.Size(692, 484);
             this.pnl_TrackedProgs.TabIndex = 13;
             // 
             // pnl_Stopped
@@ -306,9 +326,9 @@
             this.pnl_Stopped.Controls.Add(this.lbl_Stopped);
             this.pnl_Stopped.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnl_Stopped.Location = new System.Drawing.Point(0, 25);
-            this.pnl_Stopped.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pnl_Stopped.Margin = new System.Windows.Forms.Padding(4);
             this.pnl_Stopped.Name = "pnl_Stopped";
-            this.pnl_Stopped.Size = new System.Drawing.Size(669, 25);
+            this.pnl_Stopped.Size = new System.Drawing.Size(692, 25);
             this.pnl_Stopped.TabIndex = 3;
             // 
             // lbl_Stopped
@@ -320,7 +340,7 @@
             this.lbl_Stopped.Location = new System.Drawing.Point(0, 0);
             this.lbl_Stopped.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_Stopped.Name = "lbl_Stopped";
-            this.lbl_Stopped.Size = new System.Drawing.Size(669, 25);
+            this.lbl_Stopped.Size = new System.Drawing.Size(692, 25);
             this.lbl_Stopped.TabIndex = 1;
             this.lbl_Stopped.Text = "Stopped Programs";
             this.lbl_Stopped.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -331,9 +351,9 @@
             this.pnl_Running.Controls.Add(this.lbl_Running);
             this.pnl_Running.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnl_Running.Location = new System.Drawing.Point(0, 0);
-            this.pnl_Running.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pnl_Running.Margin = new System.Windows.Forms.Padding(4);
             this.pnl_Running.Name = "pnl_Running";
-            this.pnl_Running.Size = new System.Drawing.Size(669, 25);
+            this.pnl_Running.Size = new System.Drawing.Size(692, 25);
             this.pnl_Running.TabIndex = 2;
             // 
             // lbl_Running
@@ -345,7 +365,7 @@
             this.lbl_Running.Location = new System.Drawing.Point(0, 0);
             this.lbl_Running.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_Running.Name = "lbl_Running";
-            this.lbl_Running.Size = new System.Drawing.Size(669, 25);
+            this.lbl_Running.Size = new System.Drawing.Size(692, 25);
             this.lbl_Running.TabIndex = 0;
             this.lbl_Running.Text = "Running Programs";
             this.lbl_Running.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -359,7 +379,7 @@
             this.pnl_Top.Location = new System.Drawing.Point(0, 33);
             this.pnl_Top.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pnl_Top.Name = "pnl_Top";
-            this.pnl_Top.Size = new System.Drawing.Size(669, 52);
+            this.pnl_Top.Size = new System.Drawing.Size(692, 52);
             this.pnl_Top.TabIndex = 0;
             // 
             // txbx_Search
@@ -370,7 +390,7 @@
             this.txbx_Search.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txbx_Search.Name = "txbx_Search";
             this.txbx_Search.RealText = "";
-            this.txbx_Search.Size = new System.Drawing.Size(618, 22);
+            this.txbx_Search.Size = new System.Drawing.Size(641, 22);
             this.txbx_Search.TabIndex = 1;
             this.txbx_Search.Text = "Search Processes";
             this.txbx_Search.TextPlaceholder = "Search Processes";
@@ -384,7 +404,7 @@
             this.pnl_TabsParent.Location = new System.Drawing.Point(0, 24);
             this.pnl_TabsParent.Margin = new System.Windows.Forms.Padding(3, 0, 3, 2);
             this.pnl_TabsParent.Name = "pnl_TabsParent";
-            this.pnl_TabsParent.Size = new System.Drawing.Size(618, 28);
+            this.pnl_TabsParent.Size = new System.Drawing.Size(641, 28);
             this.pnl_TabsParent.TabIndex = 4;
             this.pnl_TabsParent.Resize += new System.EventHandler(this.pnl_TabsParent_Resize);
             // 
@@ -430,8 +450,8 @@
             this.pnl_TopRightButtons.Controls.Add(this.btn_TabLeft);
             this.pnl_TopRightButtons.Controls.Add(this.btn_ClearSearch);
             this.pnl_TopRightButtons.Dock = System.Windows.Forms.DockStyle.Right;
-            this.pnl_TopRightButtons.Location = new System.Drawing.Point(618, 0);
-            this.pnl_TopRightButtons.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pnl_TopRightButtons.Location = new System.Drawing.Point(641, 0);
+            this.pnl_TopRightButtons.Margin = new System.Windows.Forms.Padding(4);
             this.pnl_TopRightButtons.Name = "pnl_TopRightButtons";
             this.pnl_TopRightButtons.Size = new System.Drawing.Size(51, 52);
             this.pnl_TopRightButtons.TabIndex = 3;
@@ -442,7 +462,7 @@
             this.btn_TabRight.FlatAppearance.BorderSize = 0;
             this.btn_TabRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_TabRight.Location = new System.Drawing.Point(26, 23);
-            this.btn_TabRight.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_TabRight.Margin = new System.Windows.Forms.Padding(4);
             this.btn_TabRight.Name = "btn_TabRight";
             this.btn_TabRight.Size = new System.Drawing.Size(25, 29);
             this.btn_TabRight.TabIndex = 4;
@@ -456,7 +476,7 @@
             this.btn_TabLeft.FlatAppearance.BorderSize = 0;
             this.btn_TabLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_TabLeft.Location = new System.Drawing.Point(0, 23);
-            this.btn_TabLeft.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_TabLeft.Margin = new System.Windows.Forms.Padding(4);
             this.btn_TabLeft.Name = "btn_TabLeft";
             this.btn_TabLeft.Size = new System.Drawing.Size(25, 29);
             this.btn_TabLeft.TabIndex = 3;
@@ -470,7 +490,7 @@
             this.btn_ClearSearch.FlatAppearance.BorderSize = 0;
             this.btn_ClearSearch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_ClearSearch.Location = new System.Drawing.Point(0, 0);
-            this.btn_ClearSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_ClearSearch.Margin = new System.Windows.Forms.Padding(4);
             this.btn_ClearSearch.Name = "btn_ClearSearch";
             this.btn_ClearSearch.Size = new System.Drawing.Size(51, 23);
             this.btn_ClearSearch.TabIndex = 2;
@@ -483,7 +503,7 @@
             this.lbl_RunAsAdmin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lbl_RunAsAdmin.AutoSize = true;
             this.lbl_RunAsAdmin.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lbl_RunAsAdmin.Location = new System.Drawing.Point(460, 0);
+            this.lbl_RunAsAdmin.Location = new System.Drawing.Point(483, 0);
             this.lbl_RunAsAdmin.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_RunAsAdmin.Name = "lbl_RunAsAdmin";
             this.lbl_RunAsAdmin.Size = new System.Drawing.Size(197, 16);
@@ -502,7 +522,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(669, 544);
+            this.ClientSize = new System.Drawing.Size(692, 569);
             this.Controls.Add(this.lbl_RunAsAdmin);
             this.Controls.Add(this.pnl_TrackedProgs);
             this.Controls.Add(this.pnl_Top);
@@ -574,6 +594,8 @@
         private System.Windows.Forms.ToolStripMenuItem menuTS_SetIcon;
         private System.Windows.Forms.ToolStripMenuItem menuEdit_DeleteIcons;
         private System.Windows.Forms.ToolStripMenuItem menuEdit_Unmerge;
+        private System.Windows.Forms.ToolStripMenuItem menu_TimeRange;
+        private System.Windows.Forms.ToolStripMenuItem menu_ShowGraph;
     }
 }
 

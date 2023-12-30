@@ -36,9 +36,10 @@
             this.btn_Settings = new System.Windows.Forms.Button();
             this.pict_Icon = new System.Windows.Forms.PictureBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.spacer = new System.Windows.Forms.Splitter();
-            this.splitter1 = new System.Windows.Forms.Splitter();
+            this.spacerLeft = new System.Windows.Forms.Splitter();
+            this.spacerLeft2 = new System.Windows.Forms.Splitter();
             this.pnl_Groups = new System.Windows.Forms.Panel();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.pict_Icon)).BeginInit();
             this.SuspendLayout();
             // 
@@ -46,9 +47,9 @@
             // 
             this.lbl_Proc.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.lbl_Proc.Font = new System.Drawing.Font("Microsoft Sans Serif", 5.76F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_Proc.Location = new System.Drawing.Point(136, 26);
+            this.lbl_Proc.Location = new System.Drawing.Point(154, 26);
             this.lbl_Proc.Name = "lbl_Proc";
-            this.lbl_Proc.Size = new System.Drawing.Size(184, 20);
+            this.lbl_Proc.Size = new System.Drawing.Size(166, 20);
             this.lbl_Proc.TabIndex = 0;
             this.lbl_Proc.Text = "Process Name";
             this.lbl_Proc.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -74,9 +75,9 @@
             // 
             this.lbl_DisplayName.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_DisplayName.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.216F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_DisplayName.Location = new System.Drawing.Point(136, 0);
+            this.lbl_DisplayName.Location = new System.Drawing.Point(154, 0);
             this.lbl_DisplayName.Name = "lbl_DisplayName";
-            this.lbl_DisplayName.Size = new System.Drawing.Size(184, 26);
+            this.lbl_DisplayName.Size = new System.Drawing.Size(166, 26);
             this.lbl_DisplayName.TabIndex = 2;
             this.lbl_DisplayName.Text = "Display Name";
             this.lbl_DisplayName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -106,7 +107,7 @@
             // 
             this.pict_Icon.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.pict_Icon.Dock = System.Windows.Forms.DockStyle.Left;
-            this.pict_Icon.Location = new System.Drawing.Point(20, 0);
+            this.pict_Icon.Location = new System.Drawing.Point(38, 0);
             this.pict_Icon.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.pict_Icon.Name = "pict_Icon";
             this.pict_Icon.Size = new System.Drawing.Size(33, 46);
@@ -118,33 +119,33 @@
             this.pict_Icon.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             this.pict_Icon.MouseHover += new System.EventHandler(this.ControlMouseHover);
             // 
-            // spacer
+            // spacerLeft
             // 
-            this.spacer.Cursor = System.Windows.Forms.Cursors.Default;
-            this.spacer.Location = new System.Drawing.Point(0, 0);
-            this.spacer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.spacer.Name = "spacer";
-            this.spacer.Size = new System.Drawing.Size(20, 46);
-            this.spacer.TabIndex = 6;
-            this.spacer.TabStop = false;
-            this.spacer.Click += new System.EventHandler(this.ControlClickEvent);
-            this.spacer.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
-            this.spacer.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
-            this.spacer.MouseHover += new System.EventHandler(this.ControlMouseHover);
+            this.spacerLeft.Cursor = System.Windows.Forms.Cursors.Default;
+            this.spacerLeft.Location = new System.Drawing.Point(0, 0);
+            this.spacerLeft.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.spacerLeft.Name = "spacerLeft";
+            this.spacerLeft.Size = new System.Drawing.Size(20, 46);
+            this.spacerLeft.TabIndex = 6;
+            this.spacerLeft.TabStop = false;
+            this.spacerLeft.Click += new System.EventHandler(this.ControlClickEvent);
+            this.spacerLeft.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
+            this.spacerLeft.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
+            this.spacerLeft.MouseHover += new System.EventHandler(this.ControlMouseHover);
             // 
-            // splitter1
+            // spacerLeft2
             // 
-            this.splitter1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.splitter1.Location = new System.Drawing.Point(53, 0);
-            this.splitter1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.splitter1.Name = "splitter1";
-            this.splitter1.Size = new System.Drawing.Size(83, 46);
-            this.splitter1.TabIndex = 7;
-            this.splitter1.TabStop = false;
-            this.splitter1.Click += new System.EventHandler(this.ControlClickEvent);
-            this.splitter1.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
-            this.splitter1.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
-            this.splitter1.MouseHover += new System.EventHandler(this.ControlMouseHover);
+            this.spacerLeft2.Cursor = System.Windows.Forms.Cursors.Default;
+            this.spacerLeft2.Location = new System.Drawing.Point(71, 0);
+            this.spacerLeft2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.spacerLeft2.Name = "spacerLeft2";
+            this.spacerLeft2.Size = new System.Drawing.Size(83, 46);
+            this.spacerLeft2.TabIndex = 7;
+            this.spacerLeft2.TabStop = false;
+            this.spacerLeft2.Click += new System.EventHandler(this.ControlClickEvent);
+            this.spacerLeft2.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
+            this.spacerLeft2.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
+            this.spacerLeft2.MouseHover += new System.EventHandler(this.ControlMouseHover);
             // 
             // pnl_Groups
             // 
@@ -159,6 +160,18 @@
             this.pnl_Groups.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             this.pnl_Groups.MouseHover += new System.EventHandler(this.ControlMouseHover);
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Dock = System.Windows.Forms.DockStyle.Left;
+            this.checkBox1.Location = new System.Drawing.Point(20, 0);
+            this.checkBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(18, 46);
+            this.checkBox1.TabIndex = 9;
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.Visible = false;
+            // 
             // Ctrl_TrackingItem
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -166,9 +179,10 @@
             this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.lbl_DisplayName);
             this.Controls.Add(this.lbl_Proc);
-            this.Controls.Add(this.splitter1);
+            this.Controls.Add(this.spacerLeft2);
             this.Controls.Add(this.pict_Icon);
-            this.Controls.Add(this.spacer);
+            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.spacerLeft);
             this.Controls.Add(this.lbl_Time);
             this.Controls.Add(this.btn_Settings);
             this.Controls.Add(this.pnl_Groups);
@@ -180,6 +194,7 @@
             this.MouseLeave += new System.EventHandler(this.ControlMouseLeave);
             ((System.ComponentModel.ISupportInitialize)(this.pict_Icon)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -191,8 +206,9 @@
         private System.Windows.Forms.Button btn_Settings;
         private System.Windows.Forms.PictureBox pict_Icon;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Splitter spacer;
-        private System.Windows.Forms.Splitter splitter1;
+        private System.Windows.Forms.Splitter spacerLeft;
+        private System.Windows.Forms.Splitter spacerLeft2;
         private System.Windows.Forms.Panel pnl_Groups;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }

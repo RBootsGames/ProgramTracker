@@ -18,6 +18,7 @@ namespace ProgramTracker
         bool l_OnlyIcon = false;
         bool l_AltColor = false;
         bool l_IsSelected = false;
+        bool l_IsGrayedOut = false;
         bool isMouseOver = false;
         Color l_SelectedColor = Color.LightBlue;
         Font fontSmall = new Font("Microsoft Sans Serif", 6.5f);
@@ -163,6 +164,17 @@ namespace ProgramTracker
         }
 
         [Category("Item Settings")]
+        public bool IsGrayedOut
+        {
+            get => l_IsGrayedOut;
+            set
+            {
+                l_IsGrayedOut = value;
+                ApplyBGColor();
+            }
+        }
+
+        [Category("Item Settings")]
         public Color SelectedColor
         {
             get => l_SelectedColor;
@@ -192,6 +204,26 @@ namespace ProgramTracker
                     lbl_Time.Visible = true;
                     btn_Settings.Visible = true;
                 }
+            }
+        }
+
+        [Category("Item Settings")]
+        public bool CheckboxVisible
+        {
+            get => checkBox1.Visible;
+            set
+            {
+                if (value) // if setting visibility to true
+                {
+                    spacerLeft.Click -= ControlClickEvent;
+                    spacerLeft.Click += CheckboxClickExtendedEvent;
+                }
+                else
+                {
+                    spacerLeft.Click -= CheckboxClickExtendedEvent;
+                    spacerLeft.Click += ControlClickEvent;
+                }
+                checkBox1.UpdateOnThread(()=> checkBox1.Visible = value);
             }
         }
 
@@ -225,7 +257,7 @@ namespace ProgramTracker
         }
 
 
-        public int GetIconWidth() => spacer.Width + pict_Icon.Width + 15;
+        public int GetIconWidth() => spacerLeft.Width + pict_Icon.Width + 15;
 
         private void ApplyBGColor()
         {
@@ -237,7 +269,25 @@ namespace ProgramTracker
                 BackColor = SystemColors.ControlLight;
             else if (!UseAltColor)
                 BackColor = DefaultBackColor;
-            //BackColor = (UseAltColor) ? SystemColors.ControlLight : DefaultBackColor;
+
+            if (Duration == TimeSpan.Zero || IsGrayedOut)
+            {
+                Color c = BackColor;
+                BackColor = Color.FromArgb(
+                    (int)(c.R * .9),
+                    (int)(c.G * .9),
+                    (int)(c.B * .9));
+
+                lbl_DisplayName.ForeColor = SystemColors.GrayText;
+                lbl_Proc.ForeColor = SystemColors.GrayText;
+                lbl_Time.ForeColor = SystemColors.GrayText;
+            }
+            else
+            {
+                lbl_DisplayName.ForeColor = DefaultForeColor;
+                lbl_Proc.ForeColor = DefaultForeColor;
+                lbl_Time.ForeColor = DefaultForeColor;
+            }
         }
 
 
@@ -260,6 +310,11 @@ namespace ProgramTracker
         {
             isMouseOver = false;
             ApplyBGColor();
+        }
+
+        private void CheckboxClickExtendedEvent(object sender, EventArgs e)
+        {
+            checkBox1.Checked = !checkBox1.Checked;
         }
 
         private void ControlClickEvent(object sender, EventArgs e)

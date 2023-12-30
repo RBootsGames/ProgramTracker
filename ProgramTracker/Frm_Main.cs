@@ -60,7 +60,7 @@ namespace ProgramTracker
 
 
                 menu_Sort.SelectedIndexChanged += menu_Sort_SelectionChange;
-                SortEntries();
+                SortAndFilterEntries();
             }
         }
 
@@ -229,7 +229,7 @@ namespace ProgramTracker
 
             }
 
-            SortEntries();
+            SortAndFilterEntries();
 
             // start a timer that checks these processes
             if (eventlessProcesses.Count > 0 && tmr_CheckEventlessProcesses.Enabled == false)
@@ -270,7 +270,7 @@ namespace ProgramTracker
         /// <summary>
         /// Sorts the running and stopped processes based on the filter.
         /// </summary>
-        internal void SortEntries()
+        internal void SortAndFilterEntries()
         {
             pnl_TrackedProgs.UpdateOnThread(() =>
             {
@@ -278,6 +278,19 @@ namespace ProgramTracker
 
                 IEnumerable<Ctrl_TrackingItem> cti = pnl_TrackedProgs.Controls.OfType<Ctrl_TrackingItem>();
 
+                // apply date filter
+                if (ProgSettings.ShowFilteredOutDateEntries == false)
+                {
+                    cti = cti.Where(x =>
+                    {
+                        if (x.Duration == TimeSpan.Zero)
+                        {
+                            x.Visible = false;
+                            return false;
+                        }
+                        return true;
+                    });
+                }
 
                 // do sorting
                 switch (SortOrder)
@@ -326,7 +339,7 @@ namespace ProgramTracker
                 }
 
 
-                // apply filtering
+                // apply group filtering
                 if (ProgSettings.ProgramGroups.TryGetValue(currentGroupFilter, out var filtered))
                 {
                     if (filtered.Count > 0)
@@ -345,6 +358,7 @@ namespace ProgramTracker
                     foreach (var ctrl in cti)
                         ctrl.Visible = ctrl.FoundInSearch;
                 }
+
 
 
                 var first  = cti.Where(x => x.ParentTracker.IsRunning == true);
@@ -437,7 +451,7 @@ namespace ProgramTracker
             if (eventlessProcesses.Count == 0)
                 tmr_CheckEventlessProcesses.Stop();
 
-            SortEntries();
+            SortAndFilterEntries();
         }
 
         void eventProgramExit(object sender, EventArgs e)
@@ -486,7 +500,7 @@ namespace ProgramTracker
                 Console.WriteLine($"{proc.Id} :: {proc.ProcessName} was replaced with {replacedWith.Id} :: {replacedWith.ProcessName}.");
 
 
-            SortEntries();
+            SortAndFilterEntries();
         }
 
         void AddProgramToGroup(string groupName, string processName)
@@ -639,6 +653,7 @@ namespace ProgramTracker
                 if(item.IsRunning)
                     item.StopTracking();
             }
+            ApplyTimeRangeText();
         }
 
 
@@ -659,7 +674,7 @@ namespace ProgramTracker
             
             MasterTracker.Save();
 
-            if (UpdateThread.IsAlive)
+            if (UpdateThread != null && UpdateThread.IsAlive)
                 UpdateThread.Abort();
         }
 
@@ -676,6 +691,7 @@ namespace ProgramTracker
 
         private void eventSearchPrograms(object sender, EventArgs e)
         {
+            // prevent searching on every text change
             if (sender != tmr_SearchBarCooldown)
             {
                 tmr_SearchBarCooldown.Stop();
@@ -709,7 +725,7 @@ namespace ProgramTracker
                     proc.FoundInSearch = true;
                 }
             }
-            SortEntries();
+            SortAndFilterEntries();
         }
 
         private void btn_ClearSearch_Click(object sender, EventArgs e)
@@ -728,6 +744,51 @@ namespace ProgramTracker
             ProgSettings.SortOrder = sorter;
             ProgSettings.Save();
             ActiveControl = null;
+        }
+
+        private void menu_TimeRange_Click(object sender, EventArgs e)
+        {
+            Frm_SetTimeRange timeRangeChange = new Frm_SetTimeRange(ProgSettings);
+
+            timeRangeChange.Show();
+            
+            timeRangeChange.FormClosed += new FormClosedEventHandler(delegate (object _sender, FormClosedEventArgs _e)
+            {
+                if (timeRangeChange.Response == DialogResult.OK)
+                {
+                    ProgSettings.UseFilterDateStart = timeRangeChange.UseStartDate;
+                    ProgSettings.UseFilterDateEnd = timeRangeChange.UseEndDate;
+                    ProgSettings.ShowFilteredOutDateEntries = timeRangeChange.ShowFilteredOut;
+                    ProgSettings.FilterDateStart = timeRangeChange.StartDate;
+                    ProgSettings.FilterDateEnd = timeRangeChange.EndDate;
+
+                    ProgSettings.Save();
+                    ApplyTimeRangeText();
+
+                    // this is kind of a lazy way of delaying the filter application until after
+                    // the duration for the control/time entry is updated
+                    new Thread(() =>
+                    {
+                        Thread.Sleep(500);
+                        SortAndFilterEntries();
+                    }).Start();
+
+                    SortAndFilterEntries();
+                    if (trackingInfoPage.Visible)
+                        trackingInfoPage.ReloadData();
+                }
+            });
+        }
+        private void ApplyTimeRangeText()
+        {
+            this.Text = $"Program Tracker ({ProgSettings.RangeToString()})";
+            //menu_TimeRange.Text = $"{menu_TimeRange.AccessibleName}: {ProgSettings.RangeToString()}";
+        }
+
+        private void menu_ShowGraph_Click(object sender, EventArgs e)
+        {
+            Frm_Graph graph = new Frm_Graph();
+            graph.Show();
         }
 
         private void lbl_RunAsAdmin_Click(object sender, EventArgs e)
@@ -841,7 +902,7 @@ namespace ProgramTracker
                 ProgSettings.Save();
 
                 currentGroupFilter = "";
-                SortEntries();
+                SortAndFilterEntries();
             }
         }
 
@@ -852,12 +913,12 @@ namespace ProgramTracker
                 Ctrl_ButtonWithX btn = sender as Ctrl_ButtonWithX;
 
                 currentGroupFilter = btn.ButtonText;
-                SortEntries();
+                SortAndFilterEntries();
             }
             else
             {
                 currentGroupFilter = "";
-                SortEntries();
+                SortAndFilterEntries();
             }
         }
 
@@ -875,40 +936,46 @@ namespace ProgramTracker
         internal void OpenTrackerData(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
-                OpenTrackerSettingsMenu(sender, e);
-            else
             {
-                try
-                {
-                    foreach (var item in MasterTracker.ProcessTrackers.Values)
-                    {
-                        var ctrl = item.GetFormControl();
-                        ctrl.OnlyShowIcon = true;
-                    }
-                    var scrollPoint = pnl_TrackedProgs.AutoScrollPosition;
-                    scrollPoint.Y = -scrollPoint.Y;
-
-                    if (selectedTrackingItem != null)
-                        selectedTrackingItem.GetFormControl().IsSelected = false;
-                    Tracker t = sender as Tracker;
-
-                    //Ctrl_TrackingInfo info = new Ctrl_TrackingInfo(t);
-
-                    pnl_TrackedProgs.Dock = DockStyle.Right;
-                    pnl_TrackedProgs.Width = t.GetFormControl().GetIconWidth() + SystemInformation.VerticalScrollBarWidth;
-
-                    t.GetFormControl().IsSelected = true;
-
-                    trackingInfoPage.LoadData(t);
-                    trackingInfoPage.Visible = true;
-
-                    //pnl_TrackedProgs.AutoScrollPosition = scrollPoint;
-
-                    selectedTrackingItem = t;
-
-                }
-                catch { }
+                OpenTrackerSettingsMenu(sender, e);
+                return;
             }
+
+            try
+            {
+                // switch controls to only show icons
+                foreach (var item in MasterTracker.ProcessTrackers.Values)
+                {
+                    var ctrl = item.GetFormControl();
+                    ctrl.OnlyShowIcon = true;
+                }
+
+                // attempt to keep same location in scrolling position
+                var scrollPoint = pnl_TrackedProgs.AutoScrollPosition;
+                scrollPoint.Y = -scrollPoint.Y;
+
+                // if something is already selected, unselect it
+                if (selectedTrackingItem != null)
+                    selectedTrackingItem.GetFormControl().IsSelected = false;
+                Tracker t = sender as Tracker;
+
+                //Ctrl_TrackingInfo info = new Ctrl_TrackingInfo(t);
+
+                pnl_TrackedProgs.Dock = DockStyle.Right;
+                pnl_TrackedProgs.Width = t.GetFormControl().GetIconWidth() + SystemInformation.VerticalScrollBarWidth;
+
+                t.GetFormControl().IsSelected = true;
+
+
+                trackingInfoPage.LoadData(t);
+                trackingInfoPage.Visible = true;
+
+                //pnl_TrackedProgs.AutoScrollPosition = scrollPoint;
+
+                selectedTrackingItem = t;
+
+            }
+            catch { }
         }
 
         internal void OpenTrackerSettingsMenu(object sender, MouseEventArgs e)
@@ -988,7 +1055,7 @@ namespace ProgramTracker
 
                 popup.SelectedTracker.GetFormControl(true);
 
-                SortEntries();
+                SortAndFilterEntries();
             }
         }
 
@@ -1028,7 +1095,7 @@ namespace ProgramTracker
                 if (trackingInfoPage.Visible == true)
                     trackingInfoPage.CloseTrackingWindow();
             }
-            SortEntries();
+            SortAndFilterEntries();
         }
         private void menuTS_Delete_Click(object sender, EventArgs e)
         {
@@ -1057,7 +1124,7 @@ namespace ProgramTracker
                 if (trackingInfoPage.Visible == true)
                     trackingInfoPage.CloseTrackingWindow();
             }
-            SortEntries();
+            SortAndFilterEntries();
         }
 
         private void menuTS_DeleteIcon_Click(object sender, EventArgs e)
@@ -1205,7 +1272,7 @@ namespace ProgramTracker
             Show();
             WindowState = FormWindowState.Normal;
             Activate();
-            SortEntries();
+            SortAndFilterEntries();
             BringToFront();
             //TopMost = true;
         }

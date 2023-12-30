@@ -42,9 +42,9 @@ namespace ProgramTracker
 
         private string GetKey(Tracker tracker)
         {
-            string text = tracker.GetDisplayName();
+            string text = tracker.GetDisplayNameOverride();
             if (!string.IsNullOrEmpty(text))
-                text += $" ({tracker.ProcessName})";
+                text += $" [ {tracker.ProcessName} ]";
             else
                 text = tracker.ProcessName;
 
