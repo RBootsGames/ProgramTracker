@@ -151,7 +151,7 @@ namespace ProgramTracker
                 Frm_Main.MainForm.pnl_TrackedProgs.UpdateOnThread(() =>
                 {
                     Frm_Main.MainForm.pnl_TrackedProgs.Controls.Add(ctrl);
-                    ctrl.CheckboxVisible = true;
+                    //ctrl.CheckboxVisible = true;
                 });
 
                 t.ItemUpdated += OnTrackerUpdate;

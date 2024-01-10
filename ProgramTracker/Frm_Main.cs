@@ -283,7 +283,7 @@ namespace ProgramTracker
                 {
                     cti = cti.Where(x =>
                     {
-                        if (x.Duration == TimeSpan.Zero)
+                        if (x.Duration == TimeSpan.Zero && !x.ParentTracker.IsRunning)
                         {
                             x.Visible = false;
                             return false;
@@ -299,7 +299,7 @@ namespace ProgramTracker
                         cti = cti.OrderBy(x => x.GetVisibleName());
                         break;
                     case SortOrderType.Duration:
-                        cti = cti.OrderByDescending(x => x.Duration);
+                        cti = cti.OrderByDescending(x => x.Duration).OrderBy(x => x.GetVisibleName());
                         break;
                     case SortOrderType.MostRecent:
                         cti = cti.OrderByDescending(x =>
@@ -311,7 +311,7 @@ namespace ProgramTracker
                                 return temp.StartTime;
                             else
                                 return temp.StopTime;
-                        });
+                        }).OrderBy(x => x.GetVisibleName());
                         break;
 
                     // ====================== inverted sorting ======================
@@ -319,7 +319,7 @@ namespace ProgramTracker
                         cti = cti.OrderByDescending(x => x.GetVisibleName());
                         break;
                     case SortOrderType.DurationAcending:
-                        cti = cti.OrderBy(x => x.Duration);
+                        cti = cti.OrderBy(x => x.Duration).OrderBy(x => x.GetVisibleName());
                         break;
                     case SortOrderType.MostRecentAcending:
                         cti = cti.OrderBy(x =>
@@ -331,7 +331,7 @@ namespace ProgramTracker
                                 return temp.StartTime;
                             else
                                 return temp.StopTime;
-                        });
+                        }).OrderBy(x => x.GetVisibleName());
                         break;
                     default:
                         cti = cti.OrderBy(x => x.GetVisibleName());
