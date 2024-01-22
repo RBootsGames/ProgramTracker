@@ -311,7 +311,7 @@ namespace ProgramTracker
                                 return temp.StartTime;
                             else
                                 return temp.StopTime;
-                        }).OrderBy(x => x.GetVisibleName());
+                        });
                         break;
 
                     // ====================== inverted sorting ======================
@@ -319,10 +319,11 @@ namespace ProgramTracker
                         cti = cti.OrderByDescending(x => x.GetVisibleName());
                         break;
                     case SortOrderType.DurationAcending:
-                        cti = cti.OrderBy(x => x.Duration).OrderBy(x => x.GetVisibleName());
+                        cti = cti.OrderBy(x => x.GetVisibleName()).OrderBy(x => x.Duration);
                         break;
                     case SortOrderType.MostRecentAcending:
-                        cti = cti.OrderBy(x =>
+                        cti = cti.OrderBy(x => x.GetVisibleName())
+                            .OrderBy(x =>
                         {
                             var temp = x.ParentTracker.TimeMarkers.LastOrDefault();
                             if (temp == null)
@@ -331,7 +332,7 @@ namespace ProgramTracker
                                 return temp.StartTime;
                             else
                                 return temp.StopTime;
-                        }).OrderBy(x => x.GetVisibleName());
+                        });
                         break;
                     default:
                         cti = cti.OrderBy(x => x.GetVisibleName());
@@ -609,7 +610,6 @@ namespace ProgramTracker
                 var t = selectedTrackingItem;
                 t.GetMostRecentEntry().CalculateDuration();
                 Controls.OfType<Ctrl_TrackingInfoPage>().First().UpdateTimeDuration();
-                //Console.WriteLine("skipping");
             }
         }
 
@@ -626,8 +626,16 @@ namespace ProgramTracker
         }
 
 
-        internal void MakeItemListFullscreen(Point scrollPoint)
+        /// <param name="triggeredByButton">Set this to false if you aren't
+        /// clicking the close button in the tracking info page.</param>
+        internal void MakeItemListFullscreen(Point scrollPoint, bool triggeredByButton=true)
         {
+            if (selectedTrackingItem == null)
+                return;
+
+            if(!triggeredByButton)
+                trackingInfoPage.CloseTrackingWindow();
+
             if (scrollPoint == null)
                 scrollPoint = pnl_TrackedProgs.AutoScrollPosition;
             scrollPoint.Y = -scrollPoint.Y;
@@ -654,6 +662,15 @@ namespace ProgramTracker
                     item.StopTracking();
             }
             ApplyTimeRangeText();
+
+            // find running programs, but do it before the timer ticks for the first time
+            UpdateThread = new Thread(() =>
+            {
+                Thread.Sleep(500); // This may not be necessary, but I remember running into issues
+                                    // in the past when running this process right at load time.
+                LoadProcesses();
+            });
+            UpdateThread.Start();
         }
 
 
@@ -667,7 +684,9 @@ namespace ProgramTracker
             //if (!actuallyClosing)
             if (!Debugger.IsAttached && !actuallyClosing)
             {
+                tmr_UpdateTimes.Stop();
                 Hide();
+                MakeItemListFullscreen(new Point(0, 0), false);
                 e.Cancel = true;
                 return;
             }
@@ -782,7 +801,6 @@ namespace ProgramTracker
         private void ApplyTimeRangeText()
         {
             this.Text = $"Program Tracker ({ProgSettings.RangeToString()})";
-            //menu_TimeRange.Text = $"{menu_TimeRange.AccessibleName}: {ProgSettings.RangeToString()}";
         }
 
         private void menu_ShowGraph_Click(object sender, EventArgs e)
@@ -1269,12 +1287,13 @@ namespace ProgramTracker
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            MasterTracker.UpdateAllTimes();
             Show();
+            tmr_UpdateTimes.Start();
             WindowState = FormWindowState.Normal;
             Activate();
             SortAndFilterEntries();
             BringToFront();
-            //TopMost = true;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
