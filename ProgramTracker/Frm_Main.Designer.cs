@@ -63,6 +63,7 @@
             this.pnl_Running = new System.Windows.Forms.Panel();
             this.lbl_Running = new System.Windows.Forms.Label();
             this.pnl_Top = new System.Windows.Forms.Panel();
+            this.txbx_Search = new ProgramTracker.TextBoxModified();
             this.pnl_TabsParent = new System.Windows.Forms.Panel();
             this.pnl_Tabs = new System.Windows.Forms.Panel();
             this.btn_AddGroup = new System.Windows.Forms.Button();
@@ -73,7 +74,6 @@
             this.btn_ClearSearch = new System.Windows.Forms.Button();
             this.lbl_RunAsAdmin = new System.Windows.Forms.Label();
             this.tmr_AutoSave = new System.Windows.Forms.Timer(this.components);
-            this.txbx_Search = new ProgramTracker.TextBoxModified();
             this.menu_TrackerSettings.SuspendLayout();
             this.topMenu.SuspendLayout();
             this.menu_Notify.SuspendLayout();
@@ -371,10 +371,25 @@
             this.pnl_Top.Controls.Add(this.pnl_TopRightButtons);
             this.pnl_Top.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnl_Top.Location = new System.Drawing.Point(0, 27);
-            this.pnl_Top.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pnl_Top.Margin = new System.Windows.Forms.Padding(2);
             this.pnl_Top.Name = "pnl_Top";
             this.pnl_Top.Size = new System.Drawing.Size(519, 42);
             this.pnl_Top.TabIndex = 0;
+            // 
+            // txbx_Search
+            // 
+            this.txbx_Search.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txbx_Search.ForeColor = System.Drawing.Color.Gray;
+            this.txbx_Search.Location = new System.Drawing.Point(0, 0);
+            this.txbx_Search.Margin = new System.Windows.Forms.Padding(2);
+            this.txbx_Search.Name = "txbx_Search";
+            this.txbx_Search.RealText = "";
+            this.txbx_Search.Size = new System.Drawing.Size(481, 20);
+            this.txbx_Search.TabIndex = 1;
+            this.txbx_Search.Text = "Search Processes";
+            this.txbx_Search.TextPlaceholder = "Search Processes";
+            this.txbx_Search.TextPlaceholderColor = System.Drawing.SystemColors.ActiveBorder;
+            this.txbx_Search.TextChangedFixed += new System.EventHandler(this.eventSearchPrograms);
             // 
             // pnl_TabsParent
             // 
@@ -403,7 +418,7 @@
             this.btn_AddGroup.FlatAppearance.BorderSize = 0;
             this.btn_AddGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.792F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btn_AddGroup.Location = new System.Drawing.Point(52, 0);
-            this.btn_AddGroup.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_AddGroup.Margin = new System.Windows.Forms.Padding(2);
             this.btn_AddGroup.Name = "btn_AddGroup";
             this.btn_AddGroup.Size = new System.Drawing.Size(21, 23);
             this.btn_AddGroup.TabIndex = 0;
@@ -415,7 +430,7 @@
             // 
             this.btn_GroupAll.Dock = System.Windows.Forms.DockStyle.Left;
             this.btn_GroupAll.Location = new System.Drawing.Point(0, 0);
-            this.btn_GroupAll.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_GroupAll.Margin = new System.Windows.Forms.Padding(2);
             this.btn_GroupAll.Name = "btn_GroupAll";
             this.btn_GroupAll.Size = new System.Drawing.Size(52, 23);
             this.btn_GroupAll.TabIndex = 2;
@@ -492,21 +507,6 @@
             this.tmr_AutoSave.Tag = "30 minutes";
             this.tmr_AutoSave.Tick += new System.EventHandler(this.tmr_AutoSave_Tick);
             // 
-            // txbx_Search
-            // 
-            this.txbx_Search.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txbx_Search.ForeColor = System.Drawing.Color.Gray;
-            this.txbx_Search.Location = new System.Drawing.Point(0, 0);
-            this.txbx_Search.Margin = new System.Windows.Forms.Padding(2);
-            this.txbx_Search.Name = "txbx_Search";
-            this.txbx_Search.RealText = "";
-            this.txbx_Search.Size = new System.Drawing.Size(481, 20);
-            this.txbx_Search.TabIndex = 1;
-            this.txbx_Search.Text = "Search Processes";
-            this.txbx_Search.TextPlaceholder = "Search Processes";
-            this.txbx_Search.TextPlaceholderColor = System.Drawing.SystemColors.ActiveBorder;
-            this.txbx_Search.TextChangedFixed += new System.EventHandler(this.eventSearchPrograms);
-            // 
             // Frm_Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -518,7 +518,7 @@
             this.Controls.Add(this.topMenu);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.topMenu;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Frm_Main";
             this.Text = "Program Tracker";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Frm_Main_FormClosing);

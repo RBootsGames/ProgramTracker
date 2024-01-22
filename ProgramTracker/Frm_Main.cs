@@ -145,6 +145,7 @@ namespace ProgramTracker
             {
                 this.Shown += new EventHandler(delegate (Object sender, EventArgs e)
                 {
+                    tmr_UpdateTimes.Stop();
                     Hide();
                 });
             }
@@ -299,10 +300,11 @@ namespace ProgramTracker
                         cti = cti.OrderBy(x => x.GetVisibleName());
                         break;
                     case SortOrderType.Duration:
-                        cti = cti.OrderByDescending(x => x.Duration).OrderBy(x => x.GetVisibleName());
+                        cti = cti.OrderBy(x=>x.GetVisibleName()).OrderByDescending(x => x.Duration);
                         break;
                     case SortOrderType.MostRecent:
-                        cti = cti.OrderByDescending(x =>
+                        cti = cti.OrderBy(x => x.GetVisibleName())
+                            .OrderByDescending(x =>
                         {
                             var temp = x.ParentTracker.TimeMarkers.LastOrDefault();
                             if (temp == null)
