@@ -51,8 +51,8 @@
     <ApplicationIcon>ghost_icon_blue.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.7.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler">
       <HintPath>..\Assets\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -72,11 +72,11 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
-    <Reference Include="System.Text.Encodings.Web, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Encodings.Web.7.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    <Reference Include="System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.8.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
-    <Reference Include="System.Text.Json, Version=7.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Json.7.0.2\lib\net462\System.Text.Json.dll</HintPath>
+    <Reference Include="System.Text.Json, Version=8.0.0.4, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.8.0.4\lib\net462\System.Text.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
@@ -107,6 +107,12 @@
     </Compile>
     <Compile Include="Ctrl_CollapsibleTimeEntries.Designer.cs">
       <DependentUpon>Ctrl_CollapsibleTimeEntries.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Ctrl_ExportControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Ctrl_ExportControl.Designer.cs">
+      <DependentUpon>Ctrl_ExportControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Ctrl_IconRadio.cs">
       <SubType>UserControl</SubType>
@@ -139,6 +145,13 @@
       <DependentUpon>Ctrl_UnmergeTemplate.cs</DependentUpon>
     </Compile>
     <Compile Include="CustomExtensions.cs" />
+    <Compile Include="Debugging.cs" />
+    <Compile Include="Frm_ExportTrackers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_ExportTrackers.Designer.cs">
+      <DependentUpon>Frm_ExportTrackers.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm_Graph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -217,6 +230,9 @@
     <EmbeddedResource Include="Ctrl_CollapsibleTimeEntries.resx">
       <DependentUpon>Ctrl_CollapsibleTimeEntries.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Ctrl_ExportControl.resx">
+      <DependentUpon>Ctrl_ExportControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Ctrl_IconRadio.resx">
       <DependentUpon>Ctrl_IconRadio.cs</DependentUpon>
     </EmbeddedResource>
@@ -231,6 +247,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Ctrl_UnmergeTemplate.resx">
       <DependentUpon>Ctrl_UnmergeTemplate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_ExportTrackers.resx">
+      <DependentUpon>Frm_ExportTrackers.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_Graph.resx">
       <DependentUpon>Frm_Graph.cs</DependentUpon>

@@ -233,5 +233,9 @@ namespace ProgramTracker
             return resized;
         }
 
+        public static int Clamp(this int value, int min, int max)
+        {
+            return Math.Min(Math.Max(value, min), max);
+        }
     }
 }

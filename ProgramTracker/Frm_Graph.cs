@@ -26,7 +26,7 @@ namespace ProgramTracker
         Dictionary<string, bool> itemSelections = new Dictionary<string, bool>();
         Dictionary<string, Tracker> itemTrackers = new Dictionary<string, Tracker>();
 
-        public Frm_Graph()
+        public Frm_Graph(params string[] preSelected)
         {
             InitializeComponent();
 
@@ -39,6 +39,9 @@ namespace ProgramTracker
 
             clb_DataSelector.Items.Clear();
             //foreach (var proc in MasterTracker.ProcessTrackers.Keys)
+
+            bool autoGenerate = preSelected.Length > 0;
+
             foreach (var proc in MasterTracker.ProcessTrackers.Values)
             {
                 string text = GetDisplayName(proc);
@@ -46,7 +49,13 @@ namespace ProgramTracker
                 itemSelections[text] = false;
                 itemTrackers[text] = proc;
 
-                clb_DataSelector.Items.Add(text);
+                int index = clb_DataSelector.Items.Add(text);
+
+                if (preSelected.Contains(proc.GetVisibleName()))
+                {
+                    Console.WriteLine(index);
+                    clb_DataSelector.SetItemChecked(index, true);
+                }
             }
         }
 
@@ -60,7 +69,7 @@ namespace ProgramTracker
                 clb_DataSelector.Items.Add(item, itemSelections[item]);
             }
         }
-
+        
         private void UpdateGraph_Event(object sender, EventArgs e)
         {
             GraphData();
@@ -85,7 +94,7 @@ namespace ProgramTracker
 
         private string GetDisplayName(Tracker tracker) // this was copied from Frm_MergeProcesses
         {
-            string text = tracker.GetDisplayNameOverride();
+            string text = tracker.GetDisplayNameOverride().ToPrettyString();
             if (!string.IsNullOrEmpty(text))
                 text += $" [ {tracker.ProcessName} ]";
             else
@@ -97,6 +106,13 @@ namespace ProgramTracker
 
         List<string> GetSelectedItems()
         {
+            //List<string> items = new List<string>();
+            //foreach(string key in itemSelections.Keys)
+            //{
+            //    if (itemSelections[key] == true)
+            //        items.Add(key);
+            //}
+            //return items;
             return itemSelections
                    .Where(pair => pair.Value) // get true values
                    .Select(pair => pair.Key) // select keys
@@ -111,9 +127,13 @@ namespace ProgramTracker
         void GraphData()
         {
             dataChart.Series.Clear();
+            dataChart.ChartAreas[0].AxisY.Title =
+                        (chbx_CountEntries.Checked) ? "Launch Count" : "Hours";
+
             lbl_DurationLabels.Text = string.Empty;
             List<string> selections = GetSelectedItems();
 
+            // pie, doughnut, funnel and pyramid graph types
             if (graphType == SeriesChartType.Pie || graphType == SeriesChartType.Doughnut ||
                 graphType == SeriesChartType.Funnel || graphType == SeriesChartType.Pyramid)
             {
@@ -122,19 +142,29 @@ namespace ProgramTracker
                 foreach (string proc in selections)
                 {
                     Tracker tracker = itemTrackers[proc];
-
                     string name = tracker.GetVisibleName();
                     TrackingPoint[] allPoints = tracker.GetDatesWithinRange(date_Start.Value, date_End.Value).ToArray(); // points within range
-                    double duration = TrackingPoint.GetDuration(allPoints).TotalHours;
 
-                    graphData.Points.AddXY(name, duration);
-                    lbl_DurationLabels.Text += $"{name}: {duration.ToString("#.##")} hours   ";
+                    if (chbx_CountEntries.Checked)
+                    {
+                        int count = allPoints.Length;
+                        graphData.Points.AddXY(name, count);
+                        lbl_DurationLabels.Text += $"{name}: {count} Launches   ";
+                    }
+                    else
+                    {
+                        double duration = TrackingPoint.GetDuration(allPoints).TotalHours;
+
+                        graphData.Points.AddXY(name, duration);
+                        lbl_DurationLabels.Text += $"{name}: {duration.ToString("#.##")} hours   ";
+                    }
                 }
 
                 dataChart.Series.Add(graphData);
                 return;
             }
 
+            // all other graph types
             foreach (string proc in selections)
             {
                 Tracker tracker = itemTrackers[proc];
@@ -158,18 +188,30 @@ namespace ProgramTracker
                                           dateTime.Hour, 0, 0);
                             break;
                     }
-                    TimeSpan duration = new TimeSpan();
 
-                    foreach (TrackingPoint point in day)
+                    if (chbx_CountEntries.Checked)
                     {
-                        duration += point.GetDuration();
-                    }
+                        int count = day.Count();
 
-                    graphData.Points.AddXY(dateTime, duration.TotalHours);
+                        graphData.Points.AddXY(dateTime, count);
+                    }
+                    else
+                    {
+                        TimeSpan duration = new TimeSpan();
+
+                        foreach (TrackingPoint point in day)
+                        {
+                            duration += point.GetDuration();
+                        }
+
+                        graphData.Points.AddXY(dateTime, duration.TotalHours);
+                    }
                 }
 
                 dataChart.Series.Add(graphData);
             }
+
+            dataChart.ChartAreas[0].RecalculateAxesScale();
         }
 
         IEnumerable<IGrouping<DateTime, TrackingPoint>> GetGroupedTrackingPoints(List<TrackingPoint> points, Granularity granularity)
@@ -211,6 +253,7 @@ namespace ProgramTracker
         {
             Series s = new Series(seriesName);
             s.ChartType = graphType;
+            s.Points.Clear();
 
             //s.ChartType = SeriesChartType.Line;
             //s.ChartType = SeriesChartType.Spline;

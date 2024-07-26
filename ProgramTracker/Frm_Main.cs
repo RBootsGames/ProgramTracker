@@ -72,6 +72,7 @@ namespace ProgramTracker
         internal bool ForceReloadProcesses = false;
         Tracker selectedTrackingItemForMenu = null;
         string currentGroupFilter = "";
+        int lastClickedControlIndex = -1;
 
         Thread UpdateThread = null;
         sTimer tmr_CheckEventlessProcesses = new sTimer(1000);
@@ -83,9 +84,14 @@ namespace ProgramTracker
         public static Dictionary<int, Process> OpenProcesses = new Dictionary<int, Process>();
         private List<Process> eventlessProcesses = new List<Process>();
         Dictionary<int, Process> OpenProcessesNoTitle = new Dictionary<int, Process>();
-        IEnumerable<int> previous = Enumerable.Empty<int>();
+        IEnumerable<int> previousProcesses = Enumerable.Empty<int>();
 
         bool actuallyClosing = false;
+
+
+        // debug variables
+        bool isDebugging = false;
+
 
         public Frm_Main()
         {
@@ -116,11 +122,13 @@ namespace ProgramTracker
             lbl_RunAsAdmin.Visible = !IsAdministrator();
 
 
+            // load and apply settings
             ProgSettings = Settings.Load();
             menuEdit_Minimized.Checked = ProgSettings.StartMinimized;
+            menuEdit_Debug.Checked = ProgSettings.DebugMode;
             menuEdit_AutoStart.Checked = GetAutoStart();
 
-            // just sets the index
+            // just sets the index for sorting
             menu_Sort.SelectedIndex = (int)ProgSettings.SortOrder % (Enum.GetNames(typeof(SortOrderType)).Length / 2);
             menu_Sort.SelectedIndexChanged += menu_Sort_SelectionChange;
             SortOrder = ProgSettings.SortOrder;
@@ -161,17 +169,24 @@ namespace ProgramTracker
 
         void LoadProcesses()
         {
+            Stopwatch processGetTimer = Stopwatch.StartNew();
+
             // compare open processes with last scan
             IEnumerable<Process> runningPs = Process.GetProcesses();
             var current = runningPs.Select(x => x.Id);
 
-            var compare = current.Except(previous);
+            var compare = current.Except(previousProcesses);
+            // return if the process list hasn't changed
             if (ForceReloadProcesses == false && compare.Any() == false) // open processes is the same as before
+            {
+                processGetTimer.Stop();
+                //Console.WriteLine($"Skipped processing processes. ({processGetTimer.ElapsedMilliseconds})");
                 return;
+            }
             ForceReloadProcesses = false;
 
             Console.WriteLine("getting processes");
-            previous = current;
+            previousProcesses = current;
 
             // get all processes with window titles
             runningPs = runningPs.Where(x => !string.IsNullOrEmpty(x.MainWindowTitle))
@@ -188,11 +203,21 @@ namespace ProgramTracker
             }
 
             // add running processes to process dictionary
+
+            var openProcessNames = OpenProcesses.Values.Select(x => x.ProcessName);
             foreach (var proc in runningPs)
             {
-                if (!OpenProcesses.ContainsKey(proc.Id))
+                // don't add process if the ID or process name already exists
+                if (!OpenProcesses.ContainsKey(proc.Id) && !openProcessNames.Contains(proc.ProcessName))
                     OpenProcesses[proc.Id] = proc;
             }
+
+            /* running processes should contain processes that match these rules
+             * 
+             * includes a window title unless the process name is on the whitelist
+             * process is not on the blacklist
+             * 
+             */
 
             // loop through processes
             foreach (var item in runningPs)
@@ -240,10 +265,18 @@ namespace ProgramTracker
 
             // stop tracking programs that aren't running that failed to add an exit event
 
+
+            processGetTimer.Stop();
+
+            Debugging.Log($"process processing elapsed time: {processGetTimer.Elapsed.TotalSeconds} seconds", true);
         }
 
+        /// <summary>
+        /// This only adds an event to proccess that are in the OpenProcesses variable.
+        /// </summary>
         void AddCloseEventToProcess(Process proc)
         {
+            // if this process isn't in the OpenProcesses dictionary then don't add an event
             if (OpenProcesses.TryGetValue(proc.Id, out Process p))
             {
                 // if raising events is true, then the closing event has already been added
@@ -260,6 +293,7 @@ namespace ProgramTracker
                         //throw;
                         OpenProcesses.Remove(proc.Id);
                         eventlessProcesses.AddWithoutDupes(proc);
+                        Debugging.Log($"Couldn't use an event for {proc.ProcessName}, going eventless.", true);
                         //continue;
                     }
                 }
@@ -436,6 +470,7 @@ namespace ProgramTracker
                     removers.Add(proc);
                     MasterTracker.StopTrackingProcess(proc.ProcessName);
                     Console.WriteLine($"       {proc.ProcessName.PadRight(25)} (non-event) exited.");
+                    Debugging.Log($"{proc.ProcessName} (non-event) exited.");
                 }
                 else
                 {
@@ -444,6 +479,7 @@ namespace ProgramTracker
                         AddCloseEventToProcess(matching.First());
                         removers.Add(proc);
                         Console.WriteLine($"{proc.Id} :: {proc.ProcessName} was replaced with {proc.Id} :: {proc.ProcessName}");
+                        Debugging.Log($"{proc.Id} :: {proc.ProcessName} was replaced with {proc.Id} :: {proc.ProcessName}");
                     }
                 }
 
@@ -459,10 +495,12 @@ namespace ProgramTracker
 
         void eventProgramExit(object sender, EventArgs e)
         {
+            Stopwatch exitTimer = Stopwatch.StartNew();
+
             Process proc = sender as Process;
             Process replacedWith = null;
 
-            proc.WaitForExit(5000);
+            bool didExit = proc.WaitForExit(4000);
             
             OpenProcesses.Remove(proc.Id);
 
@@ -480,30 +518,43 @@ namespace ProgramTracker
             }
 
             bool stopTracking = true;
-            if (matching.Count() > 0)
+            //if (matching.Count() > 0)
+            //{
+            foreach (var replacement in matching)
             {
-                foreach (var replacement in matching)
+                if (replacement.HasExited == false)
                 {
-                    if (replacement.HasExited == false)
-                    {
-                        AddCloseEventToProcess(replacement);
-                        OpenProcesses[replacement.Id] = replacement;
-                        replacedWith = replacement;
-                        stopTracking = false;
-                    }
+                    OpenProcesses[replacement.Id] = replacement;
+                    AddCloseEventToProcess(replacement);
+                    replacedWith = replacement;
+                    stopTracking = false;
+                    break;
                 }
             }
+            //}
 
             if (stopTracking)
             {
                 MasterTracker.StopTrackingProcess(proc.ProcessName);
                 Console.WriteLine($"{proc.Id} :: {proc.ProcessName.PadRight(25)} exited.");
+                Debugging.Log($"\"{proc.ProcessName}\" exited.");
             }
             else
+            {
                 Console.WriteLine($"{proc.Id} :: {proc.ProcessName} was replaced with {replacedWith.Id} :: {replacedWith.ProcessName}.");
+                Debugging.Log($"\"{proc.ProcessName}\" exited and was replaced by another process.");
+            }
 
 
             SortAndFilterEntries();
+
+            exitTimer.Stop();
+
+            string exitMessage = $"Program exit event for \"{proc.ProcessName}\": {exitTimer.Elapsed.TotalSeconds} seconds";
+            if (!didExit)
+                exitMessage += " (wait for exit timer timed out)";
+
+            Debugging.Log(exitMessage, true);
         }
 
         void AddProgramToGroup(string groupName, string processName)
@@ -592,6 +643,20 @@ namespace ProgramTracker
             }
         }
 
+        IEnumerable<Ctrl_TrackingItem> GetAllTrackingItems(bool excludeHidden=false)
+        {
+            var trackingItems = pnl_TrackedProgs.Controls.OfType<Ctrl_TrackingItem>();
+            if (excludeHidden)
+                return trackingItems.Where(x => x.Visible);
+            else
+                return trackingItems;
+        }
+
+        IEnumerable<Ctrl_TrackingItem> GetSelectedTrackingItems(bool getDeselectedInstead=false)
+        {
+            return GetAllTrackingItems(true).Where(x => x.IsMultiSelected == !getDeselectedInstead);
+        }
+
 
         #region Form Controls
 
@@ -662,7 +727,13 @@ namespace ProgramTracker
             {
                 if(item.IsRunning)
                     item.StopTracking();
+
+                // apply click events to tracking item controls
+                item.GetFormControl().ControlClick += Ctrl_TrackingItems_Click;
+                item.GetFormControl().ClickToggleSelect += TrackingControlSelectionToggled;
             }
+
+
             ApplyTimeRangeText();
 
             // find running programs, but do it before the timer ticks for the first time
@@ -673,6 +744,8 @@ namespace ProgramTracker
                 LoadProcesses();
             });
             UpdateThread.Start();
+
+            Debugging.Log("Program Tracker started");
         }
 
 
@@ -697,6 +770,8 @@ namespace ProgramTracker
 
             if (UpdateThread != null && UpdateThread.IsAlive)
                 UpdateThread.Abort();
+
+            Debugging.Log("Program Tracker closed");
         }
 
         private void pnl_TabsParent_Resize(object sender, EventArgs e)
@@ -754,6 +829,30 @@ namespace ProgramTracker
             txbx_Search.ClearText();
         }
 
+        private void btn_ToggleSelectAll_Click(object sender, EventArgs e)
+        {
+            var trackingItems = GetAllTrackingItems();
+
+            bool allSelected = GetSelectedTrackingItems(true).Count() == 0;
+
+            foreach (var item in trackingItems)
+                item.IsMultiSelected = !allSelected;
+
+            if (allSelected) // technically this is inverted because the selection has been changed now
+            {
+                btn_ToggleSelectAll.Text = "Select All";
+                menuEdit_DeleteSelection.Visible = false;
+                menuTS_DeleteSelection.Visible = false;
+            }
+            else
+            {
+                btn_ToggleSelectAll.Text = "Deselect All";
+                menuEdit_DeleteSelection.Visible = true;
+                menuTS_DeleteSelection.Visible = true;
+            }
+
+        }
+
         private void menu_Sort_SelectionChange(object sender, EventArgs e)
         {
             SortOrderType sorter = (SortOrderType)menu_Sort.SelectedIndex;
@@ -807,7 +906,8 @@ namespace ProgramTracker
 
         private void menu_ShowGraph_Click(object sender, EventArgs e)
         {
-            Frm_Graph graph = new Frm_Graph();
+            var selections = GetSelectedTrackingItems().Select(x => x.GetVisibleName()).ToArray();
+            Frm_Graph graph = new Frm_Graph(selections);
             graph.Show();
         }
 
@@ -823,6 +923,90 @@ namespace ProgramTracker
                 lbl_RunAsAdmin.Visible = false;
             }
         }
+
+        private void Ctrl_TrackingItems_Click(object sender, EventArgs e)
+        {
+            // This is currently unused
+        }
+
+        private void chbx_ShowChecks_CheckedChanged(object sender, EventArgs e)
+        {
+            var trackingItems = GetAllTrackingItems();
+
+            foreach (var item in trackingItems)
+            {
+                item.CheckboxVisible = chbx_ShowChecks.Checked;
+                if (!chbx_ShowChecks.Checked && item.IsMultiSelected)
+                    item.IsMultiSelected = false;
+            }
+        }
+
+        #endregion
+        #region Multi-select tracking item controls
+
+        private void TrackingControlSelectionToggled(object sender, EventArgs e)
+        {
+            if (sender.GetType() != typeof(Ctrl_TrackingItem))
+                return;
+            Ctrl_TrackingItem trackingItem = (Ctrl_TrackingItem)sender;
+            //Console.WriteLine("clicked: " + trackingItem.GetVisibleName());
+
+            int clickedIndex = trackingItem.Parent.Controls.IndexOf(trackingItem);
+
+            //if ((ModifierKeys & Keys.Control) == Keys.Control)
+            if (ModifierKeys == Keys.Control) // only control
+            {
+                trackingItem.IsMultiSelected = !trackingItem.IsMultiSelected;
+            }
+            //else if ((ModifierKeys & Keys.Shift) == Keys.Shift)
+            else if (ModifierKeys == Keys.Shift && lastClickedControlIndex != -1) // only shift
+            {
+
+                int interval = lastClickedControlIndex - clickedIndex;
+                if (interval == 0)
+                    interval = 1;
+                interval = interval / Math.Abs(interval);
+
+                int i = clickedIndex;
+                while (i != lastClickedControlIndex)
+                {
+                    try
+                    {
+                        Ctrl_TrackingItem item = (Ctrl_TrackingItem)trackingItem.Parent.Controls[i];
+                        item.IsMultiSelected = true;
+                        //item.IsSelected = true;
+                    }
+                    catch{}
+
+                    i += interval;
+                }
+            }
+
+            lastClickedControlIndex = clickedIndex;
+
+            bool allSelected = GetSelectedTrackingItems(true).Count() == 0;
+            bool anythingSelected = GetSelectedTrackingItems().Count() > 0;
+
+            // enable and disable controls based on something being selected
+            if (anythingSelected)
+            {
+                menuEdit_DeleteSelection.Visible = true;
+                menuTS_DeleteSelection.Visible = true;
+                menuEdit_ExportSelection.Visible = true;
+            }
+            else
+            {
+                menuEdit_DeleteSelection.Visible = false;
+                menuTS_DeleteSelection.Visible = false;
+                menuEdit_ExportSelection.Visible = false;
+            }
+
+            if (allSelected)
+                btn_ToggleSelectAll.Text = "Deselect All";
+            else
+                btn_ToggleSelectAll.Text = "Select All";
+        }
+
         #endregion
         #region Group button controls
 
@@ -1122,6 +1306,12 @@ namespace ProgramTracker
             DeleteProcessItem(selectedTrackingItemForMenu);
         }
 
+        private void menuTS_DeleteSelection_Click(object sender, EventArgs e)
+        {
+            // Use the same event that is used in the 'Edit' menu. Yeah I know I could just assign this button to use that event the normal way.
+            menuEdit_DeleteSelection_Click(sender, e);
+        }
+
         private void menuTS_Blacklist_Click(object sender, EventArgs e)
         {
             Tracker selection = selectedTrackingItemForMenu;
@@ -1241,6 +1431,34 @@ namespace ProgramTracker
             popup.Show();
         }
 
+        private void menuEdit_DeleteSelection_Click(object sender, EventArgs e)
+        {
+            // can't use IEnumerable here because it gets messed up in the foreach loop while deleting items
+            var selection = GetSelectedTrackingItems().Select(x => x.ParentTracker).ToList();
+            string text = "";
+            if (selection.Count() <= 10)
+                text = string.Join("\n", selection.Select(x => x.GetVisibleName()));
+            else
+            {
+                //var slice = new ArraySegment<string>(selection.Select(x => x.GetVisibleName()).ToArray(), 0, 10);
+                var slice = selection.Take(10);
+                text = string.Join("\n", slice.Select(x => x.GetVisibleName()));
+                text += "\n...";
+            }
+            
+            if (MessageBox.Show($"Delete all tracking data for {selection.Count()} item(s).\n\n{text}", "Are you sure?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                foreach (Tracker item in selection)
+                    DeleteProcessItem(item, true);
+            }
+
+            //foreach (var item in GetSelectedTrackingItems())
+            //{
+            //    item.IsMultiSelected = false;
+            //}
+            SortAndFilterEntries();
+        }
+
         private void menuEdit_Unmerge_Click(object sender, EventArgs e)
         {
             Frm_UnmergeProcesses popup = new Frm_UnmergeProcesses();
@@ -1282,6 +1500,24 @@ namespace ProgramTracker
                     File.Delete(icon);
 
             }
+        }
+
+        private void menuEdit_ExportSelection_Click(object sender, EventArgs e)
+        {
+            var selection = GetSelectedTrackingItems().Select(x => x.ParentTracker).ToArray();
+
+            if (selection.Any() == false)
+                return;
+
+            Frm_ExportTrackers popup = new Frm_ExportTrackers(selection);
+
+            popup.Show();
+        }
+
+        private void menuEdit_Debug_Click(object sender, EventArgs e)
+        {
+            ProgSettings.DebugMode = menuEdit_Debug.Checked;
+            ProgSettings.Save();
         }
 
         #endregion

@@ -33,6 +33,7 @@ namespace ProgramTracker
         public bool ShowFilteredOutDateEntries { get; set; } = false;
         public DateTime FilterDateStart { get; set; }
         public DateTime FilterDateEnd { get; set; }
+        public bool DebugMode { get; set; }
         #endregion
 
         public Settings()

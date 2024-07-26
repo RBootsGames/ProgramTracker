@@ -18,7 +18,7 @@ namespace ProgramTracker
         /// <summary></summary>
         /// <param name="savePath">Defaults to %USERPROFILE%\Program Tracker</param>
         /// <param name="keepProcsRunning">Set to true if you aren't stopping the program.</param>
-        public void Save(string savePath = "", bool keepProcsRunning = false)
+        public void Save(string savePath = "", bool keepProcsRunning = false, string fileNameOverride="")
         {
             if (keepProcsRunning)
             {
@@ -60,7 +60,11 @@ namespace ProgramTracker
             string data = JsonSerializer.Serialize(this, options);
 
             Directory.CreateDirectory(savePath);
-            savePath = Path.Combine(savePath, "trackingdata.json");
+
+            if (string.IsNullOrEmpty(fileNameOverride))
+                fileNameOverride = "trackingdata.json";
+
+            savePath = Path.Combine(savePath, fileNameOverride);
 
             File.WriteAllText(savePath, data);
         }
@@ -148,6 +152,7 @@ namespace ProgramTracker
                 ProcessTrackers.Add(procName, t);
 
                 var ctrl = t.GetFormControl();
+                
                 Frm_Main.MainForm.pnl_TrackedProgs.UpdateOnThread(() =>
                 {
                     Frm_Main.MainForm.pnl_TrackedProgs.Controls.Add(ctrl);

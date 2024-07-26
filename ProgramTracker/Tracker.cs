@@ -221,6 +221,7 @@ namespace ProgramTracker
         }
 
         public DateTime GetOldestDate() => TimeMarkers[0].StartTime;
+        public DateTime? GetNewestDate(bool getCloseTime = false) => (getCloseTime) ? TimeMarkers.Last().StopTime : TimeMarkers.Last().StartTime;
 
         /// <summary>
         /// This will return a list of tracking points as long as their start times fall within the date range.
@@ -234,6 +235,7 @@ namespace ProgramTracker
             {
                 if (point.StartTime >= start && point.StartTime <= end)
                     result.Add(point);
+                // shouldn't be any after this that meet the requirements
                 else if (point.StartTime > end)
                     break;
             }

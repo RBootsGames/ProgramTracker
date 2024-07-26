@@ -85,7 +85,10 @@ namespace ProgramTracker
                 // no start date has been set, so get oldest date available
                 try
                 {
-                    StartDate = (settings.FilterDateStart == DateTimePicker.MinimumDateTime) ? Frm_Main.MasterTracker.GetOldestDate() : settings.FilterDateStart;
+                    DateTime old = Frm_Main.MasterTracker.GetOldestDate();
+                    StartDate = (settings.FilterDateStart == DateTimePicker.MinimumDateTime) ? old : settings.FilterDateStart;
+                    if (StartDate < old)
+                        StartDate = old;
                 }
                 catch // this could cause issues if there is no oldest date
                 {

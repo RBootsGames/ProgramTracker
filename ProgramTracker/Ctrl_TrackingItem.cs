@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,9 +19,11 @@ namespace ProgramTracker
         bool l_OnlyIcon = false;
         bool l_AltColor = false;
         bool l_IsSelected = false;
+        bool l_IsMultiSelected = false;
         bool l_IsGrayedOut = false;
         bool isMouseOver = false;
         Color l_SelectedColor = Color.LightBlue;
+        Color l_MultiSelectedColor = Color.LightBlue;
         Font fontSmall = new Font("Microsoft Sans Serif", 6.5f);
         Font fontLarge = new Font("Microsoft Sans Serif", 9f);
 
@@ -164,6 +167,20 @@ namespace ProgramTracker
         }
 
         [Category("Item Settings")]
+        public bool IsMultiSelected
+        {
+            get => l_IsMultiSelected;
+            set
+            {
+                l_IsMultiSelected = value;
+                checkBox1.Checked = value;
+                if (l_IsMultiSelected)
+                    BackColor = MultiSelectedColor;
+                ApplyBGColor();
+            }
+        }
+
+        [Category("Item Settings")]
         public bool IsGrayedOut
         {
             get => l_IsGrayedOut;
@@ -179,6 +196,13 @@ namespace ProgramTracker
         {
             get => l_SelectedColor;
             set => l_SelectedColor = value;
+        }
+
+        [Category("Item Settings")]
+        public Color MultiSelectedColor
+        {
+            get => l_MultiSelectedColor;
+            set => l_MultiSelectedColor = value;
         }
 
         [Category("Item Settings")]
@@ -234,6 +258,9 @@ namespace ProgramTracker
         [Category("Action")]
         public event EventHandler ControlClick;
 
+        [Category("Action")]
+        public event EventHandler ClickToggleSelect;
+
 
         internal Ctrl_TrackingItem(Tracker _parentTracker)
         {
@@ -244,14 +271,12 @@ namespace ProgramTracker
         }
 
         internal Ctrl_TrackingItem(string _processName, Tracker _parentTracker, TimeSpan? _duration=null, string _displayName="")
+            :this(_parentTracker)
         {
-            InitializeComponent();
             ProcessName = _processName;
-            l_ParentTracker = _parentTracker;
 
             Duration = (_duration == null) ? TimeSpan.Zero : (TimeSpan)_duration;
             DisplayName = _displayName;
-            Dock = DockStyle.Top;
 
             Groups = new List<string>();
         }
@@ -261,14 +286,46 @@ namespace ProgramTracker
 
         private void ApplyBGColor()
         {
+            //if (IsSelected)
+            //    BackColor = SelectedColor;
+            //else if (IsMultiSelected)
+            //    BackColor = MultiSelectedColor;
+            //else if (isMouseOver)
+            //    BackColor = Color.LightGray; // rgb(211, 211, 211)(#d3d3d3)
+            //else if (UseAltColor)
+            //    BackColor = SystemColors.ControlLight; // rgb(227, 227, 227)(#e3e3e3)
+            //else if (!UseAltColor)
+            //    BackColor = DefaultBackColor; // Control rgb(240, 240, 240)(#f0f0f0)
+            
+            
             if (IsSelected)
                 BackColor = SelectedColor;
-            else if (isMouseOver)
-                BackColor = Color.LightGray;
+            else if (IsMultiSelected)
+                BackColor = MultiSelectedColor;
+            else
+                BackColor = DefaultBackColor; // Control rgb(240, 240, 240)(#f0f0f0)
+
+            if (isMouseOver)
+            {
+                int amount = -29;
+                Color c = BackColor;
+                BackColor = Color.FromArgb(
+                    (c.R + amount).Clamp(0, 255),
+                    (c.G + amount).Clamp(0, 255),
+                    (c.B + amount).Clamp(0, 255));
+                //BackColor = Color.LightGray; // rgb(211, 211, 211)(#d3d3d3)
+            }
             else if (UseAltColor)
-                BackColor = SystemColors.ControlLight;
-            else if (!UseAltColor)
-                BackColor = DefaultBackColor;
+            {
+                int amount = -13;
+                Color c = BackColor;
+                BackColor = Color.FromArgb(
+                    (c.R + amount).Clamp(0, 255),
+                    (c.G + amount).Clamp(0, 255),
+                    (c.B + amount).Clamp(0, 255));
+                //BackColor = SystemColors.ControlLight; // rgb(227, 227, 227)(#e3e3e3)
+            }
+
 
             if (Duration == TimeSpan.Zero || IsGrayedOut)
             {
@@ -315,18 +372,25 @@ namespace ProgramTracker
         private void CheckboxClickExtendedEvent(object sender, EventArgs e)
         {
             checkBox1.Checked = !checkBox1.Checked;
+            checkBox1_MouseClick(sender, e);
         }
 
         private void ControlClickEvent(object sender, EventArgs e)
         {
+            ControlClick?.Invoke(this, e);
 
+            // don't open the tracking data if control or shift are pressed
+            if ((ModifierKeys & Keys.Control) == Keys.Control ||
+                (ModifierKeys & Keys.Shift) == Keys.Shift)
+            {
+                ClickToggleSelect?.Invoke(this, e);
+                return;
+            }
+            
             if (Frm_Main.MasterTracker.ProcessTrackers.TryGetValue(ProcessName, out Tracker t))
             {
                 Frm_Main.MainForm.OpenTrackerData(t, (MouseEventArgs)e);
             }
-
-            if (ControlClick != null)
-                ControlClick(this, e);
         }
 
         private void SettingClickEvent(object sender, EventArgs e)
@@ -345,6 +409,11 @@ namespace ProgramTracker
         {
             if (OnlyShowIcon)
                 toolTip1.SetToolTip(sender as Control, (!string.IsNullOrEmpty(DisplayName)) ? DisplayName : ProcessName.ToPrettyString());
+        }
+
+        private void checkBox1_MouseClick(object sender, EventArgs e)
+        {
+            IsMultiSelected = checkBox1.Checked;
         }
     }
 }
