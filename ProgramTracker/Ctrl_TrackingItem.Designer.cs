@@ -137,6 +137,7 @@
             // spacerLeft2
             // 
             this.spacerLeft2.Cursor = System.Windows.Forms.Cursors.Default;
+            this.spacerLeft2.Enabled = false;
             this.spacerLeft2.Location = new System.Drawing.Point(61, 0);
             this.spacerLeft2.Name = "spacerLeft2";
             this.spacerLeft2.Size = new System.Drawing.Size(62, 37);

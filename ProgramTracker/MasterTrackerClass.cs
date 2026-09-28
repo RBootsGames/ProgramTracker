@@ -152,7 +152,7 @@ namespace ProgramTracker
                 ProcessTrackers.Add(procName, t);
 
                 var ctrl = t.GetFormControl();
-                
+
                 Frm_Main.MainForm.pnl_TrackedProgs.UpdateOnThread(() =>
                 {
                     Frm_Main.MainForm.pnl_TrackedProgs.Controls.Add(ctrl);

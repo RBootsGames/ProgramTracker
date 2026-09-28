@@ -51,7 +51,7 @@ namespace ProgramTracker
             var p = new TrackingPoint(startTime, parent:this);
             p.UpdatedTracker += OnItemUpdated;
             TimeMarkers.Add(p);
-            TrackingFormControl = (_trackingForm != null) ? _trackingForm : new Ctrl_TrackingItem(ProcessName, this, _displayName:GetDisplayNameOverride());
+            TrackingFormControl = (_trackingForm != null) ? _trackingForm : new Ctrl_TrackingItem(ProcessName, this, _displayName: GetDisplayNameOverride());
             //TrackingFormControl.Dock = DockStyle.Top;
 
             TrackingFormControl.Icon = GetSavedIcon();
@@ -103,8 +103,8 @@ namespace ProgramTracker
         /// <summary>Returns the display name if the control has one, otherwise returns the process name.</summary>
         public string GetVisibleName()
         {
-            var a = GetDisplayNameOverride();
-            return (string.IsNullOrEmpty(a)) ? ProcessName.ToPrettyString() : a;
+            var name = GetDisplayNameOverride();
+            return (string.IsNullOrEmpty(name)) ? ProcessName.ToPrettyString() : name;
         }
 
         public List<string> GetGroups()

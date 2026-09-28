@@ -251,7 +251,10 @@ namespace ProgramTracker
                         trackingInfoPage.AddNewEntry();
                     }
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
 
             }
 
@@ -729,8 +732,10 @@ namespace ProgramTracker
                     item.StopTracking();
 
                 // apply click events to tracking item controls
-                item.GetFormControl().ControlClick += Ctrl_TrackingItems_Click;
-                item.GetFormControl().ClickToggleSelect += TrackingControlSelectionToggled;
+                // this was moved to the constructor method for the control object
+
+                //item.GetFormControl().ControlClick += Ctrl_TrackingItems_Click;
+                //item.GetFormControl().ClickToggleSelect += TrackingControlSelectionToggled;
             }
 
 
@@ -924,9 +929,10 @@ namespace ProgramTracker
             }
         }
 
-        private void Ctrl_TrackingItems_Click(object sender, EventArgs e)
+        internal void Ctrl_TrackingItems_Click(object sender, EventArgs e)
         {
             // This is currently unused
+            // Why do I still have this here?
         }
 
         private void chbx_ShowChecks_CheckedChanged(object sender, EventArgs e)
@@ -944,7 +950,7 @@ namespace ProgramTracker
         #endregion
         #region Multi-select tracking item controls
 
-        private void TrackingControlSelectionToggled(object sender, EventArgs e)
+        internal void TrackingControlSelectionToggled(object sender, EventArgs e)
         {
             if (sender.GetType() != typeof(Ctrl_TrackingItem))
                 return;

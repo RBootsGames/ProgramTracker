@@ -32,6 +32,9 @@ namespace ProgramTracker
 
         internal bool FoundInSearch = true;
 
+        /// <summary>
+        /// Adds labels at the bottom if this process is part of a program group.
+        /// </summary>
         public List<string> Groups
         {
             set
@@ -262,16 +265,20 @@ namespace ProgramTracker
         public event EventHandler ClickToggleSelect;
 
 
-        internal Ctrl_TrackingItem(Tracker _parentTracker)
+        internal Ctrl_TrackingItem(Tracker _parentTracker, string _displayName="")
         {
             InitializeComponent();
             l_ParentTracker = _parentTracker;
-            DisplayName = "";
+            DisplayName = _displayName;
             Dock = DockStyle.Top;
+
+            // add events
+            ControlClick += Frm_Main.MainForm.Ctrl_TrackingItems_Click;
+            ClickToggleSelect += Frm_Main.MainForm.TrackingControlSelectionToggled;
         }
 
         internal Ctrl_TrackingItem(string _processName, Tracker _parentTracker, TimeSpan? _duration=null, string _displayName="")
-            :this(_parentTracker)
+            :this(_parentTracker, _displayName)
         {
             ProcessName = _processName;
 
